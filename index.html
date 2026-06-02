@@ -26,29 +26,31 @@
 
     header {
       background: transparent;
-      padding: 4vh 20px 2vh;
-      text-align: center;
+      padding: 2vh 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       flex-shrink: 0;
+      gap: 20px;
     }
 
     header .date {
       font-family: 'Lora', serif;
-      font-size: 2vh;
+      font-size: 1.8vh;
       color: #34524F;
       letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
     .shift-info {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 0.8vh 20px;
-      flex-wrap: wrap;
+      gap: 14px;
+      padding: 0.7vh 16px;
+      flex-wrap: nowrap;
       flex-shrink: 0;
       background: #34524F;
-      margin: 0 auto 1.2vh;
-      max-width: 800px;
-      border-radius: 1.2vh;
+      border-radius: 1vh;
     }
 
     .shift-field {
@@ -429,6 +431,11 @@
       font-style: italic;
     }
 
+    @media (max-width: 900px) {
+      header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .shift-info { flex-wrap: wrap; }
+    }
+
     .toast {
       position: fixed;
       bottom: 20px;
@@ -452,42 +459,41 @@
 <body>
   <header>
     <div class="date" id="currentDate"></div>
+    <div class="shift-info">
+      <div class="shift-field">
+        <label>Folks:</label>
+        <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+      </div>
+      <div class="shift-divider"></div>
+      <div class="shift-field">
+        <label>Open:</label>
+        <input type="number" id="registerOpen" value="250" />
+        <select id="openAssignee">
+          <option value="">--</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+      </div>
+      <div class="shift-field">
+        <label>Close:</label>
+        <input type="number" id="registerClose" value="250" />
+        <select id="closeAssignee">
+          <option value="">--</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
+    </div>
   </header>
-
-  <div class="shift-info">
-    <div class="shift-field">
-      <label>Folks:</label>
-      <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
-    </div>
-    <div class="shift-divider"></div>
-    <div class="shift-field">
-      <label>Open:</label>
-      <input type="number" id="registerOpen" value="250" />
-      <select id="openAssignee">
-        <option value="">--</option>
-        <option value="Ash">Ash</option>
-        <option value="Brett">Brett</option>
-        <option value="Dom">Dom</option>
-        <option value="Emma">Emma</option>
-        <option value="Emily">Emily</option>
-        <option value="Lena">Lena</option>
-      </select>
-    </div>
-    <div class="shift-field">
-      <label>Close:</label>
-      <input type="number" id="registerClose" value="250" />
-      <select id="closeAssignee">
-        <option value="">--</option>
-        <option value="Ash">Ash</option>
-        <option value="Brett">Brett</option>
-        <option value="Dom">Dom</option>
-        <option value="Emma">Emma</option>
-        <option value="Emily">Emily</option>
-        <option value="Lena">Lena</option>
-      </select>
-    </div>
-    <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
-  </div>
 
   <div class="board">
     <div class="column">
