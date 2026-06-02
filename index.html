@@ -26,38 +26,30 @@
 
     header {
       background: transparent;
-      padding: 1.8vh 20px 0;
-      display: flex;
-      align-items: center;
-      gap: 18px;
+      padding: 4vh 20px 2vh;
+      text-align: center;
       flex-shrink: 0;
     }
 
-    header h1 {
-      font-family: 'Lora', serif;
-      font-size: 3.2vh;
-      font-weight: 600;
-      color: #34524F;
-    }
-
     header .date {
-      font-size: 1.6vh;
-      color: #3A3632;
-      opacity: 0.6;
-      letter-spacing: 0.3px;
+      font-family: 'Lora', serif;
+      font-size: 2vh;
+      color: #34524F;
+      letter-spacing: 0.5px;
     }
 
     .shift-info {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 1.2vh 20px;
+      justify-content: center;
+      gap: 24px;
+      padding: 1.6vh 28px;
       flex-wrap: wrap;
       flex-shrink: 0;
-      background: #FFFFFF;
-      margin: 0 20px;
+      background: #34524F;
+      margin: 0 auto 1.2vh;
+      max-width: 750px;
       border-radius: 1.8vh;
-      box-shadow: 0 2px 12px rgba(58, 54, 50, 0.08);
     }
 
     .shift-field {
@@ -70,8 +62,7 @@
       font-size: 1.4vh;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      color: #3A3632;
-      opacity: 0.5;
+      color: #D4CFC9;
     }
 
     .shift-field input,
@@ -81,20 +72,25 @@
       border-radius: 1vh;
       font-family: 'Oxygen', sans-serif;
       font-size: 1.6vh;
-      background-color: #F5F1EB;
-      color: #3A3632;
+      background-color: rgba(255,255,255,0.15);
+      color: #FFFFFF;
       transition: background-color 0.2s;
+    }
+
+    .shift-field input::placeholder {
+      color: rgba(255,255,255,0.4);
     }
 
     .shift-field input:focus,
     .shift-field select:focus {
       outline: none;
-      background-color: #EDE8E0;
+      background-color: rgba(255,255,255,0.25);
     }
 
     .shift-field input[type="text"] { width: 100px; }
     .shift-field input[type="number"] { width: 72px; text-align: center; }
     .shift-field select { cursor: pointer; min-width: 80px; }
+    .shift-field select option { color: #3A3632; background: #FFFFFF; }
 
     .btn {
       padding: 1vh 18px;
@@ -122,12 +118,12 @@
 
     .btn-ghost {
       background: transparent;
-      border: 1.5px solid #D4CFC9;
-      color: #3A3632;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: #FFFFFF;
     }
 
     .btn-ghost:hover {
-      background: #D4CFC9;
+      background: rgba(255,255,255,0.15);
     }
 
     .sync-status {
@@ -450,10 +446,7 @@
 </head>
 <body>
   <header>
-    <div>
-      <h1>The Whispering Shelf</h1>
-      <div class="date" id="currentDate"></div>
-    </div>
+    <div class="date" id="currentDate"></div>
   </header>
 
   <div class="shift-info">
