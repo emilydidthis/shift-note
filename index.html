@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shift Note - The Whispering Shelf</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oxygen:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Oxygen', sans-serif;
+      background-color: #FFF8F0;
+      color: #3A3632;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: transparent;
+      padding: 1.8vh 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-family: 'Lora', serif;
+      font-size: 3.2vh;
+      font-weight: 600;
+      color: #34524F;
+    }
+
+    header .date {
+      font-size: 1.6vh;
+      color: #3A3632;
+      opacity: 0.6;
+      letter-spacing: 0.3px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .header-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-field label {
+      font-size: 1.4vh;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #3A3632;
+      opacity: 0.5;
+    }
+
+    .header-field input,
+    .header-field select {
+      padding: 0.8vh 12px;
+      border: none;
+      border-radius: 1vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.6vh;
+      background-color: #F5F1EB;
+      color: #3A3632;
+      transition: background-color 0.2s;
+    }
+
+    .header-field input:focus,
+    .header-field select:focus {
+      outline: none;
+      background-color: #EDE8E0;
+    }
+
+    .header-field input[type="text"] { width: 100px; }
+    .header-field input[type="number"] { width: 72px; text-align: center; }
+    .header-field select { cursor: pointer; min-width: 80px; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-left: auto;
+    }
+
+    .btn {
+      padding: 1vh 18px;
+      border: none;
+      border-radius: 1vh;
+      cursor: pointer;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.6vh;
+      font-weight: 600;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-primary {
+      background: #34524F;
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover { background: #2a4240; }
+
+    .btn-sm {
+      padding: 0.8vh 14px;
+      font-size: 1.4vh;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid #D4CFC9;
+      color: #3A3632;
+    }
+
+    .btn-ghost:hover {
+      background: #D4CFC9;
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.4vh;
+      color: #3A3632;
+      opacity: 0.6;
+    }
+
+    .sync-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #C8C0B6;
+    }
+
+    .sync-status .dot.local { background: #D4B57A; }
+    .sync-status .dot.cloud { background: #34524F; }
+    .sync-status .dot.error { background: #B85C5C; }
+
+    .board {
+      display: flex;
+      gap: 16px;
+      padding: 1.2vh 20px 1.8vh;
+      overflow-x: auto;
+      flex: 1;
+      align-items: flex-start;
+    }
+
+    .column {
+      background: #FFFFFF;
+      border-radius: 1.8vh;
+      width: 340px;
+      min-width: 280px;
+      max-height: calc(100vh - 90px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(58, 54, 50, 0.08);
+    }
+
+    .column.narrow {
+      width: 260px;
+      min-width: 240px;
+    }
+
+    .column-header {
+      padding: 1.4vh 18px;
+      font-family: 'Lora', serif;
+      font-weight: 600;
+      font-size: 2vh;
+      color: #34524F;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #F5F1EB;
+    }
+
+    .column-count {
+      background: #34524F;
+      color: #FFFFFF;
+      border-radius: 1vh;
+      padding: 0.4vh 10px;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      font-weight: 600;
+    }
+
+    .card-list {
+      padding: 10px 12px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #34524F;
+      color: #FFFFFF;
+      font-size: 2vh;
+      cursor: pointer;
+      margin: 10px auto 12px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .add-btn:hover {
+      background: #2a4240;
+      transform: scale(1.1);
+    }
+
+    .form-container {
+      display: none;
+      padding: 0 14px 14px;
+    }
+
+    .form-container.active {
+      display: block;
+    }
+
+    .form-container textarea,
+    .form-container input,
+    .form-container select {
+      width: 100%;
+      padding: 1vh 14px;
+      border: none;
+      border-radius: 1.2vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.6vh;
+      background-color: #F5F1EB;
+      color: #3A3632;
+      resize: none;
+      transition: background-color 0.2s;
+    }
+
+    .form-container textarea:focus,
+    .form-container input:focus,
+    .form-container select:focus {
+      outline: none;
+      background-color: #EDE8E0;
+    }
+
+    .form-container textarea::placeholder,
+    .form-container input::placeholder {
+      color: #C8C0B6;
+    }
+
+    .form-container select {
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .form-container .btn {
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .assignee-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .assignee-chip {
+      padding: 0.5vh 12px;
+      border-radius: 1.2vh;
+      font-size: 1.4vh;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid #D4CFC9;
+      background: white;
+      color: #3A3632;
+      font-family: 'Oxygen', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .assignee-chip:hover { border-color: #34524F; }
+    .assignee-chip.selected { background: #34524F; color: white; border-color: #34524F; }
+    .assignee-chip.all-chip.selected { background: #D4B57A; border-color: #D4B57A; color: #3A3632; }
+
+    .card {
+      background: #F5F1EB;
+      border-radius: 1.2vh;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      position: relative;
+      transition: background-color 0.15s;
+    }
+
+    .card:hover { background: #EDE8E0; }
+
+    .card.completed { opacity: 0.6; }
+    .card.completed .card-text { text-decoration: line-through; }
+
+    .card-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #34524F;
+      color: #D4B57A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2vh;
+      font-weight: 700;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      font-family: 'Oxygen', sans-serif;
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-text {
+      font-size: 1.6vh;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .card-meta {
+      font-size: 1.3vh;
+      color: #3A3632;
+      opacity: 0.5;
+      margin-top: 5px;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+    }
+
+    .tag {
+      padding: 0.4vh 8px;
+      border-radius: 0.8vh;
+      font-size: 1.2vh;
+      font-weight: 600;
+      background: #D4CFC9;
+      color: #3A3632;
+      font-family: 'Oxygen', sans-serif;
+    }
+
+    .tag.all {
+      background: #D4B57A;
+      color: #3A3632;
+    }
+
+    .card-delete {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #3A3632;
+      cursor: pointer;
+      font-size: 1.6vh;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.15s;
+      padding: 3px 5px;
+      border-radius: 0.6vh;
+    }
+
+    .card:hover .card-delete { opacity: 0.5; }
+    .card-delete:hover { opacity: 1 !important; color: #B85C5C; }
+
+    .card-check {
+      margin-top: 7px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .card-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #34524F;
+    }
+
+    .card-check label {
+      font-size: 1.3vh;
+      color: #3A3632;
+      opacity: 0.5;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5vh;
+      color: #3A3632;
+      opacity: 0.4;
+      font-size: 1.5vh;
+      font-style: italic;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #34524F;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: 1.2vh;
+      box-shadow: 0 2px 12px rgba(58, 54, 50, 0.15);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.6vh;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>The Whispering Shelf</h1>
+      <div class="date" id="currentDate"></div>
+    </div>
+    <div class="header-meta">
+      <div class="header-field">
+        <label>Folks:</label>
+        <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+        <button class="btn btn-sm btn-ghost" onclick="updateDailyInfo('folks_working')">Save</button>
+      </div>
+      <div class="header-field">
+        <label>Open:</label>
+        <select id="openAssignee">
+          <option value="">--</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+        <input type="number" id="registerOpen" value="250" />
+      </div>
+      <div class="header-field">
+        <label>Close:</label>
+        <select id="closeAssignee">
+          <option value="">--</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+        <input type="number" id="registerClose" value="250" />
+        <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="sync-status" id="syncStatus" style="display:none">
+        <span class="dot" id="syncDot"></span>
+        <span id="syncText">Loading</span>
+      </div>
+      <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="column">
+      <div class="column-header">
+        Announcements
+        <span class="column-count" id="annCount">0</span>
+      </div>
+      <div class="card-list" id="announcementList"></div>
+      <button class="add-btn" onclick="toggleForm('ann')">+</button>
+      <div class="form-container" id="annForm">
+        <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
+        <select id="announcementAuthor">
+          <option value="">Author</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="addAnnouncement()">Add</button>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="column-header">
+        To-Do List
+        <span class="column-count" id="todoCount">0</span>
+      </div>
+      <div class="card-list" id="todoList"></div>
+      <button class="add-btn" onclick="toggleForm('todo')">+</button>
+      <div class="form-container" id="todoForm">
+        <textarea id="todoText" rows="2" placeholder="Add a task..."></textarea>
+        <div class="assignee-selector" id="assigneeSelector">
+          <span class="assignee-chip all-chip" data-value="All" onclick="toggleAssignee(this)">All</span>
+          <span class="assignee-chip" data-value="Ash" onclick="toggleAssignee(this)">Ash</span>
+          <span class="assignee-chip" data-value="Brett" onclick="toggleAssignee(this)">Brett</span>
+          <span class="assignee-chip" data-value="Dom" onclick="toggleAssignee(this)">Dom</span>
+          <span class="assignee-chip" data-value="Emma" onclick="toggleAssignee(this)">Emma</span>
+          <span class="assignee-chip" data-value="Emily" onclick="toggleAssignee(this)">Emily</span>
+          <span class="assignee-chip" data-value="Lena" onclick="toggleAssignee(this)">Lena</span>
+        </div>
+        <select id="todoAuthor">
+          <option value="">Added by</option>
+          <option value="Ash">Ash</option>
+          <option value="Brett">Brett</option>
+          <option value="Dom">Dom</option>
+          <option value="Emma">Emma</option>
+          <option value="Emily">Emily</option>
+          <option value="Lena">Lena</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="addTodo()">Add</button>
+      </div>
+    </div>
+
+    <div class="column narrow">
+      <div class="column-header">
+        Shopping List
+        <span class="column-count" id="shopCount">0</span>
+      </div>
+      <div class="card-list" id="shoppingList"></div>
+      <button class="add-btn" onclick="toggleForm('shop')">+</button>
+      <div class="form-container" id="shopForm">
+        <input type="text" id="shoppingItem" placeholder="Add item..." />
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
+      </div>
+    </div>
+
+    <div class="column narrow">
+      <div class="column-header">
+        Upcoming Events
+        <span class="column-count" id="eventCount">0</span>
+      </div>
+      <div class="card-list" id="eventList"></div>
+      <button class="add-btn" onclick="toggleForm('event')">+</button>
+      <div class="form-container" id="eventForm">
+        <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
+
+    const EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
+
+    let state = {
+      announcements: [],
+      todos: [],
+      dailyInfo: {
+        folks_working: '',
+        register_open: 250,
+        register_close: 250,
+        open_assignee: '',
+        close_assignee: '',
+        shopping_list: [],
+        events: []
+      },
+      selectedAssignees: []
+    };
+
+    let cloudSaving = false;
+    let cloudSaveQueue = [];
+
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    loadData();
+
+    function toggleForm(type) {
+      const formMap = { ann: 'annForm', todo: 'todoForm', shop: 'shopForm', event: 'eventForm' };
+      const formId = formMap[type];
+      const form = document.getElementById(formId);
+      const isActive = form.classList.contains('active');
+
+      document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+
+      if (!isActive) {
+        form.classList.add('active');
+        const textarea = form.querySelector('textarea, input');
+        if (textarea) setTimeout(() => textarea.focus(), 50);
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.form-container') && !e.target.closest('.add-btn')) {
+        document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+      }
+    });
+
+    function updateSyncStatus(type) {
+      const syncEl = document.getElementById('syncStatus');
+      const syncTextEl = document.getElementById('syncText');
+      const syncDot = document.getElementById('syncDot');
+      syncEl.style.display = 'flex';
+      if (type === 'cloud') {
+        syncTextEl.textContent = 'Synced';
+        syncDot.className = 'dot cloud';
+      } else if (type === 'error') {
+        syncTextEl.textContent = 'Sync failed';
+        syncDot.className = 'dot error';
+      } else {
+        syncTextEl.textContent = 'Local';
+        syncDot.className = 'dot local';
+      }
+    }
+
+    function loadFromLocal() {
+      const local = localStorage.getItem('shiftNote');
+      if (local) {
+        const parsed = JSON.parse(local);
+        state.announcements = parsed.announcements || [];
+        state.todos = parsed.todos || [];
+        state.dailyInfo = { ...state.dailyInfo, ...parsed.dailyInfo };
+        return true;
+      }
+      return false;
+    }
+
+    function saveToLocal() {
+      localStorage.setItem('shiftNote', JSON.stringify({
+        announcements: state.announcements,
+        todos: state.todos,
+        dailyInfo: state.dailyInfo
+      }));
+    }
+
+    function loadData() {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
+        loadFromLocal();
+        render();
+        updateSyncStatus('local');
+        return;
+      }
+
+      const hasLocal = loadFromLocal();
+      if (hasLocal) {
+        render();
+        updateSyncStatus('local');
+      }
+
+      const script = document.createElement('script');
+      script.src = APPS_SCRIPT_URL + '?callback=handleCloudData';
+      script.onerror = function() {
+        if (!hasLocal) { render(); }
+        updateSyncStatus('error');
+      };
+      document.body.appendChild(script);
+    }
+
+    function handleCloudData(data) {
+      const cloudAnn = data.announcements || [];
+      const cloudTodos = data.todos || [];
+      const cloudDaily = data.dailyInfo || {};
+
+      const annMap = {};
+      state.announcements.forEach(a => annMap[a.id] = a);
+      cloudAnn.forEach(a => {
+        const existing = annMap[a.id];
+        if (!existing || (a.updatedAt || 0) > (existing.updatedAt || 0)) {
+          annMap[a.id] = a;
+        }
+      });
+      state.announcements = Object.values(annMap);
+
+      const todoMap = {};
+      state.todos.forEach(t => todoMap[t.id] = t);
+      cloudTodos.forEach(t => {
+        const existing = todoMap[t.id];
+        if (!existing || (t.updatedAt || 0) > (existing.updatedAt || 0)) {
+          todoMap[t.id] = t;
+        }
+      });
+      state.todos = Object.values(todoMap);
+
+      if ((cloudDaily._updatedAt || 0) > (state.dailyInfo._updatedAt || 0)) {
+        state.dailyInfo = { ...state.dailyInfo, ...cloudDaily };
+      }
+
+      saveToLocal();
+      render();
+      updateSyncStatus('cloud');
+    }
+
+    async function saveToCloud() {
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) return;
+      cloudSaveQueue.push(Date.now());
+      if (cloudSaving) return;
+      cloudSaving = true;
+
+      while (cloudSaveQueue.length > 0) {
+        cloudSaveQueue.shift();
+        try {
+          const payload = JSON.stringify({
+            action: 'saveAll',
+            announcements: state.announcements,
+            todos: state.todos,
+            dailyInfo: state.dailyInfo
+          });
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: payload
+          });
+          updateSyncStatus('cloud');
+        } catch (e) {
+          updateSyncStatus('error');
+        }
+      }
+      cloudSaving = false;
+    }
+
+    function saveAll() {
+      const now = Date.now();
+      state.announcements = state.announcements.map(a => ({ ...a, updatedAt: now }));
+      state.todos = state.todos.map(t => ({ ...t, updatedAt: now }));
+      state.dailyInfo._updatedAt = now;
+
+      saveToLocal();
+      saveToCloud();
+    }
+
+    function toggleAssignee(el) {
+      const value = el.dataset.value;
+      if (value === 'All') {
+        const allSelected = state.selectedAssignees.includes('All');
+        if (allSelected) {
+          state.selectedAssignees = [];
+          document.querySelectorAll('.assignee-chip').forEach(c => c.classList.remove('selected'));
+        } else {
+          state.selectedAssignees = ['All'];
+          document.querySelectorAll('.assignee-chip').forEach(c => c.classList.remove('selected'));
+          el.classList.add('selected');
+        }
+      } else {
+        state.selectedAssignees = state.selectedAssignees.filter(a => a !== 'All');
+        document.querySelector('.all-chip').classList.remove('selected');
+
+        if (state.selectedAssignees.includes(value)) {
+          state.selectedAssignees = state.selectedAssignees.filter(a => a !== value);
+          el.classList.remove('selected');
+        } else {
+          state.selectedAssignees.push(value);
+          el.classList.add('selected');
+        }
+      }
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    function addAnnouncement() {
+      const text = document.getElementById('announcementText').value.trim();
+      const author = document.getElementById('announcementAuthor').value;
+      if (!text || !author) { showToast('Fill in content and author'); return; }
+
+      state.announcements.unshift({
+        id: Date.now().toString(),
+        content: text,
+        author,
+        timestamp: new Date().toISOString()
+      });
+
+      saveAll();
+      document.getElementById('announcementText').value = '';
+      document.getElementById('annForm').classList.remove('active');
+      render();
+      showToast('Announcement added');
+    }
+
+    function addTodo() {
+      const text = document.getElementById('todoText').value.trim();
+      const author = document.getElementById('todoAuthor').value;
+      if (!text || state.selectedAssignees.length === 0 || !author) { showToast('Fill in all fields and select assignee(s)'); return; }
+
+      state.todos.unshift({
+        id: Date.now().toString(),
+        content: text,
+        assignees: [...state.selectedAssignees],
+        author,
+        timestamp: new Date().toISOString(),
+        completed: false
+      });
+
+      saveAll();
+      document.getElementById('todoText').value = '';
+      state.selectedAssignees = [];
+      document.querySelectorAll('.assignee-chip').forEach(c => c.classList.remove('selected'));
+      document.getElementById('todoForm').classList.remove('active');
+      render();
+      showToast('Task added');
+    }
+
+    function toggleTodo(id) {
+      const todo = state.todos.find(t => t.id === id);
+      if (!todo) return;
+      todo.completed = !todo.completed;
+      saveAll();
+      render();
+    }
+
+    function deleteTodo(id) {
+      state.todos = state.todos.filter(t => t.id !== id);
+      saveAll();
+      render();
+    }
+
+    function deleteAnnouncement(id) {
+      state.announcements = state.announcements.filter(a => a.id !== id);
+      saveAll();
+      render();
+    }
+
+    function updateDailyInfo(key) {
+      const value = document.getElementById('folksWorking').value.trim();
+      if (!value) return;
+      state.dailyInfo[key] = value;
+      saveAll();
+      render();
+      showToast('Saved');
+    }
+
+    function updateRegisters() {
+      state.dailyInfo.register_open = document.getElementById('registerOpen').value;
+      state.dailyInfo.register_close = document.getElementById('registerClose').value;
+      state.dailyInfo.open_assignee = document.getElementById('openAssignee').value;
+      state.dailyInfo.close_assignee = document.getElementById('closeAssignee').value;
+      saveAll();
+      showToast('Register counts saved');
+    }
+
+    function addShoppingItem() {
+      const text = document.getElementById('shoppingItem').value.trim();
+      if (!text) return;
+      state.dailyInfo.shopping_list.push({ id: Date.now().toString(), content: text });
+      saveAll();
+      document.getElementById('shoppingItem').value = '';
+      document.getElementById('shopForm').classList.remove('active');
+      render();
+    }
+
+    function removeShoppingItem(id) {
+      state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
+      saveAll();
+      render();
+    }
+
+    function addEvent() {
+      const text = document.getElementById('eventText').value.trim();
+      if (!text) return;
+      state.dailyInfo.events.push({ id: Date.now().toString(), content: text });
+      saveAll();
+      document.getElementById('eventText').value = '';
+      document.getElementById('eventForm').classList.remove('active');
+      render();
+    }
+
+    function removeEvent(id) {
+      state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
+      saveAll();
+      render();
+    }
+
+    function render() {
+      document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
+      document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
+      document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
+      document.getElementById('openAssignee').value = state.dailyInfo.open_assignee || '';
+      document.getElementById('closeAssignee').value = state.dailyInfo.close_assignee || '';
+
+      const annList = document.getElementById('announcementList');
+      document.getElementById('annCount').textContent = state.announcements.length;
+      if (state.announcements.length === 0) {
+        annList.innerHTML = '<div class="empty-state">No announcements yet</div>';
+      } else {
+        annList.innerHTML = state.announcements.map(a => `
+          <div class="card">
+            <div class="card-row">
+              <div class="avatar">${getInitials(a.author)}</div>
+              <div class="card-body">
+                <div class="card-text">${escapeHtml(a.content)}</div>
+                <div class="card-meta">${a.author} - ${formatTime(a.timestamp)}</div>
+              </div>
+            </div>
+            <button class="card-delete" onclick="deleteAnnouncement('${a.id}')">&times;</button>
+          </div>
+        `).join('');
+      }
+
+      const todoList = document.getElementById('todoList');
+      document.getElementById('todoCount').textContent = state.todos.length;
+      if (state.todos.length === 0) {
+        todoList.innerHTML = '<div class="empty-state">No tasks yet</div>';
+      } else {
+        todoList.innerHTML = state.todos.map(t => `
+          <div class="card ${t.completed ? 'completed' : ''}">
+            <div class="card-text">${escapeHtml(t.content)}</div>
+            <div class="card-tags">
+              ${t.assignees.map(a => `<span class="tag ${a === 'All' ? 'all' : ''}">${a}</span>`).join('')}
+            </div>
+            <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
+            <div class="card-check">
+              <input type="checkbox" id="check-${t.id}" ${t.completed ? 'checked' : ''} onchange="toggleTodo('${t.id}')" />
+              <label for="check-${t.id}">${t.completed ? 'Done' : 'Mark done'}</label>
+            </div>
+            <button class="card-delete" onclick="deleteTodo('${t.id}')">&times;</button>
+          </div>
+        `).join('');
+      }
+
+      const shopList = document.getElementById('shoppingList');
+      document.getElementById('shopCount').textContent = state.dailyInfo.shopping_list.length;
+      if (state.dailyInfo.shopping_list.length === 0) {
+        shopList.innerHTML = '<div class="empty-state">Shopping list is empty</div>';
+      } else {
+        shopList.innerHTML = state.dailyInfo.shopping_list.map(i => `
+          <div class="card">
+            <div class="card-text">${escapeHtml(i.content)}</div>
+            <button class="card-delete" onclick="removeShoppingItem('${i.id}')">&times;</button>
+          </div>
+        `).join('');
+      }
+
+      const evtList = document.getElementById('eventList');
+      document.getElementById('eventCount').textContent = state.dailyInfo.events.length;
+      if (state.dailyInfo.events.length === 0) {
+        evtList.innerHTML = '<div class="empty-state">No upcoming events</div>';
+      } else {
+        evtList.innerHTML = state.dailyInfo.events.map(i => `
+          <div class="card">
+            <div class="card-text">${escapeHtml(i.content)}</div>
+            <button class="card-delete" onclick="removeEvent('${i.id}')">&times;</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function emailSnapshot() {
+      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      let body = `SHIFT NOTE - ${date}\n`;
+      body += `${'='.repeat(40)}\n\n`;
+
+      body += `FOLKS WORKING: ${state.dailyInfo.folks_working || 'Not set'}\n`;
+      body += `OPENING: $${state.dailyInfo.register_open || 250} (${state.dailyInfo.open_assignee || '--'})\n`;
+      body += `CLOSING: $${state.dailyInfo.register_close || 250} (${state.dailyInfo.close_assignee || '--'})\n\n`;
+
+      body += `ANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
+      state.announcements.forEach(a => {
+        body += `- ${a.content} (${a.author})\n`;
+      });
+      if (state.announcements.length === 0) body += '(none)\n';
+
+      body += `\nTO-DO LIST:\n${'-'.repeat(30)}\n`;
+      state.todos.forEach(t => {
+        const status = t.completed ? '[DONE]' : '[ ]';
+        const assignees = t.assignees.join(', ');
+        body += `${status} [${assignees}] ${t.content} (by ${t.author})\n`;
+      });
+      if (state.todos.length === 0) body += '(none)\n';
+
+      body += `\nSHOPPING LIST:\n${'-'.repeat(30)}\n`;
+      state.dailyInfo.shopping_list.forEach(i => {
+        body += `- ${i.content}\n`;
+      });
+      if (state.dailyInfo.shopping_list.length === 0) body += '(empty)\n';
+
+      body += `\nUPCOMING EVENTS:\n${'-'.repeat(30)}\n`;
+      state.dailyInfo.events.forEach(i => {
+        body += `- ${i.content}\n`;
+      });
+      if (state.dailyInfo.events.length === 0) body += '(none)\n';
+
+      const subject = encodeURIComponent(`Shift Note - ${date}`);
+      const bodyEncoded = encodeURIComponent(body);
+
+      const link = document.createElement('a');
+      link.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+      link.click();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
