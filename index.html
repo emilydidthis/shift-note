@@ -674,13 +674,23 @@
         updateSyncStatus('local');
       }
 
-      const script = document.createElement('script');
-      script.src = APPS_SCRIPT_URL + '?callback=handleCloudData';
-      script.onerror = function() {
-        if (!hasLocal) { render(); }
-        updateSyncStatus('error');
-      };
-      document.body.appendChild(script);
+      if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
+        fetch(APPS_SCRIPT_URL)
+          .then(res => res.json())
+          .then(handleCloudData)
+          .catch(() => {
+            if (!hasLocal) { render(); }
+            updateSyncStatus('error');
+          });
+      } else {
+        const script = document.createElement('script');
+        script.src = APPS_SCRIPT_URL + '?callback=handleCloudData';
+        script.onerror = function() {
+          if (!hasLocal) { render(); }
+          updateSyncStatus('error');
+        };
+        document.body.appendChild(script);
+      }
     }
 
     function handleCloudData(data) {
