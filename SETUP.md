@@ -57,15 +57,17 @@ function doGet(e) {
   const sheet = getSheet();
   const data = sheet.getDataRange().getValues();
   
-  let annJson = null, todoJson = null, dailyJson = null;
+  let annJson = null, todoJson = null, dailyJson = null, empJson = null;
   
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === 'announcements') annJson = data[i][1];
     if (data[i][0] === 'todos') todoJson = data[i][1];
     if (data[i][0] === 'dailyInfo') dailyJson = data[i][1];
+    if (data[i][0] === 'employees') empJson = data[i][1];
   }
   
   const result = {
+    employees: empJson ? JSON.parse(empJson) : ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'],
     announcements: annJson ? JSON.parse(annJson) : [],
     todos: todoJson ? JSON.parse(todoJson) : [],
     dailyInfo: dailyJson ? JSON.parse(dailyJson) : {
@@ -91,6 +93,7 @@ function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   
   if (data.action === 'saveAll') {
+    if (data.employees) saveData('employees', data.employees);
     saveData('announcements', data.announcements);
     saveData('todos', data.todos);
     saveData('dailyInfo', data.dailyInfo);

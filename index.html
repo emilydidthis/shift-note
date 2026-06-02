@@ -43,6 +43,28 @@
       white-space: nowrap;
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 2vh;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: #FFF;
+    }
+
     .shift-info {
       display: flex;
       align-items: center;
@@ -199,6 +221,13 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #F5F1EB;
+      gap: 8px;
+    }
+
+    .column-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .column-count {
@@ -209,6 +238,17 @@
       font-family: 'Oxygen', sans-serif;
       font-size: 1.4vh;
       font-weight: 600;
+    }
+
+    .todo-filter {
+      padding: 0.4vh 8px;
+      border: 1.5px solid #D4CFC9;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.2vh;
+      background: white;
+      color: #3A3632;
+      cursor: pointer;
     }
 
     .card-list {
@@ -454,144 +494,363 @@
     }
 
     .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Settings Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #FFFFFF;
+      border-radius: 1.8vh;
+      padding: 24px;
+      width: 360px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .modal h3 {
+      font-family: 'Lora', serif;
+      font-size: 2vh;
+      color: #34524F;
+      margin-bottom: 16px;
+    }
+
+    .modal-employee-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .modal-employee-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F1EB;
+    }
+
+    .modal-employee-list li:last-child { border-bottom: none; }
+
+    .modal-employee-list input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #D4CFC9;
+      border-radius: 6px;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      background: #F5F1EB;
+      color: #3A3632;
+    }
+
+    .modal-employee-list input:focus {
+      outline: none;
+      border-color: #34524F;
+    }
+
+    .modal-delete-btn {
+      background: none;
+      border: none;
+      color: #B85C5C;
+      cursor: pointer;
+      font-size: 1.6vh;
+      padding: 4px;
+      opacity: 0.5;
+      transition: opacity 0.15s;
+    }
+
+    .modal-delete-btn:hover { opacity: 1; }
+
+    .modal-add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 8px;
+      border: 1.5px dashed #D4CFC9;
+      border-radius: 8px;
+      background: none;
+      color: #3A3632;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.15s;
+    }
+
+    .modal-add-btn:hover {
+      border-color: #34524F;
+      color: #34524F;
+    }
+
+    .modal-close {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #34524F;
+      color: #FFF;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { background: #2a4240; }
+
+    /* Personal Task Page */
+    .task-page {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      background: #FFF8F0;
+    }
+
+    .task-page.active {
+      display: flex;
+    }
+
+    .task-page-header {
+      background: #34524F;
+      padding: 1.8vh 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .task-page-back {
+      background: none;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: #FFF;
+      padding: 0.6vh 14px;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .task-page-back:hover { background: rgba(255,255,255,0.15); }
+
+    .task-page-title {
+      font-family: 'Lora', serif;
+      font-size: 2.4vh;
+      font-weight: 600;
+      color: #FFF;
+    }
+
+    .task-page-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .task-page-item {
+      background: #FFFFFF;
+      border-radius: 1.2vh;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(58,54,50,0.06);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .task-page-item.completed {
+      opacity: 0.5;
+    }
+
+    .task-page-item.completed .task-page-text {
+      text-decoration: line-through;
+    }
+
+    .task-page-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: #34524F;
+      flex-shrink: 0;
+    }
+
+    .task-page-text {
+      font-size: 1.6vh;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .task-page-meta {
+      font-size: 1.2vh;
+      color: #3A3632;
+      opacity: 0.4;
+      margin-top: 4px;
+    }
+
+    .task-page-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #3A3632;
+      opacity: 0.4;
+      font-size: 1.6vh;
+    }
+
+    .board-container {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .board-container.active {
+      display: flex;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="date" id="currentDate"></div>
-    <div class="shift-info">
-      <div class="shift-field">
-        <label>Folks:</label>
-        <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
-      </div>
-      <div class="shift-divider"></div>
-      <div class="shift-field">
-        <label>Open:</label>
-        <input type="number" id="registerOpen" value="250" />
-        <select id="openAssignee">
-          <option value="">--</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-      </div>
-      <div class="shift-field">
-        <label>Close:</label>
-        <input type="number" id="registerClose" value="250" />
-        <select id="closeAssignee">
-          <option value="">--</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-      </div>
-      <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
-    </div>
-  </header>
-
-  <div class="board">
-    <div class="column">
-      <div class="column-header">
-        Announcements
-        <span class="column-count" id="annCount">0</span>
-      </div>
-      <div class="card-list" id="announcementList"></div>
-      <button class="add-btn" onclick="toggleForm('ann')">+</button>
-      <div class="form-container" id="annForm">
-        <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
-        <select id="announcementAuthor">
-          <option value="">Author</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-        <button class="btn btn-primary btn-sm" onclick="addAnnouncement()">Add</button>
-      </div>
-    </div>
-
-    <div class="column">
-      <div class="column-header">
-        To-Do List
-        <span class="column-count" id="todoCount">0</span>
-      </div>
-      <div class="card-list" id="todoList"></div>
-      <button class="add-btn" onclick="toggleForm('todo')">+</button>
-      <div class="form-container" id="todoForm">
-        <textarea id="todoText" rows="2" placeholder="Add a task..."></textarea>
-        <div class="assignee-selector" id="assigneeSelector">
-          <span class="assignee-chip all-chip" data-value="All" onclick="toggleAssignee(this)">All</span>
-          <span class="assignee-chip" data-value="Ash" onclick="toggleAssignee(this)">Ash</span>
-          <span class="assignee-chip" data-value="Brett" onclick="toggleAssignee(this)">Brett</span>
-          <span class="assignee-chip" data-value="Dom" onclick="toggleAssignee(this)">Dom</span>
-          <span class="assignee-chip" data-value="Emma" onclick="toggleAssignee(this)">Emma</span>
-          <span class="assignee-chip" data-value="Emily" onclick="toggleAssignee(this)">Emily</span>
-          <span class="assignee-chip" data-value="Lena" onclick="toggleAssignee(this)">Lena</span>
+  <!-- Board View -->
+  <div class="board-container active" id="boardContainer">
+    <header>
+      <div class="date" id="currentDate"></div>
+      <div class="header-right">
+        <div class="shift-info">
+          <div class="shift-field">
+            <label>Folks:</label>
+            <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+          </div>
+          <div class="shift-divider"></div>
+          <div class="shift-field">
+            <label>Open:</label>
+            <input type="number" id="registerOpen" value="250" />
+            <select id="openAssignee"></select>
+          </div>
+          <div class="shift-field">
+            <label>Close:</label>
+            <input type="number" id="registerClose" value="250" />
+            <select id="closeAssignee"></select>
+          </div>
+          <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
-        <select id="todoAuthor">
-          <option value="">Added by</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-        <button class="btn btn-primary btn-sm" onclick="addTodo()">Add</button>
+        <button class="settings-btn" onclick="openSettings()" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <div class="board">
+      <div class="column">
+        <div class="column-header">
+          <div class="column-header-left">
+            Announcements
+            <span class="column-count" id="annCount">0</span>
+          </div>
+        </div>
+        <div class="card-list" id="announcementList"></div>
+        <button class="add-btn" onclick="toggleForm('ann')">+</button>
+        <div class="form-container" id="annForm">
+          <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
+          <select id="announcementAuthor"></select>
+          <button class="btn btn-primary btn-sm" onclick="addAnnouncement()">Add</button>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="column-header">
+          <div class="column-header-left">
+            To-Do List
+            <span class="column-count" id="todoCount">0</span>
+          </div>
+          <select class="todo-filter" id="todoFilter" onchange="render()">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="card-list" id="todoList"></div>
+        <button class="add-btn" onclick="toggleForm('todo')">+</button>
+        <div class="form-container" id="todoForm">
+          <textarea id="todoText" rows="2" placeholder="Add a task..."></textarea>
+          <div class="assignee-selector" id="assigneeSelector"></div>
+          <select id="todoAuthor"></select>
+          <button class="btn btn-primary btn-sm" onclick="addTodo()">Add</button>
+        </div>
+      </div>
+
+      <div class="column narrow">
+        <div class="column-header">
+          <div class="column-header-left">
+            Shopping List
+            <span class="column-count" id="shopCount">0</span>
+          </div>
+        </div>
+        <div class="card-list" id="shoppingList"></div>
+        <button class="add-btn" onclick="toggleForm('shop')">+</button>
+        <div class="form-container" id="shopForm">
+          <input type="text" id="shoppingItem" placeholder="Add item..." />
+          <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
+        </div>
+      </div>
+
+      <div class="column narrow">
+        <div class="column-header">
+          <div class="column-header-left">
+            Upcoming Events
+            <span class="column-count" id="eventCount">0</span>
+          </div>
+        </div>
+        <div class="card-list" id="eventList"></div>
+        <button class="add-btn" onclick="toggleForm('event')">+</button>
+        <div class="form-container" id="eventForm">
+          <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
+          <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
+        </div>
       </div>
     </div>
 
-    <div class="column narrow">
-      <div class="column-header">
-        Shopping List
-        <span class="column-count" id="shopCount">0</span>
+    <footer>
+      <div class="sync-status" id="syncStatus" style="display:none">
+        <span class="dot" id="syncDot"></span>
+        <span id="syncText">Loading</span>
       </div>
-      <div class="card-list" id="shoppingList"></div>
-      <button class="add-btn" onclick="toggleForm('shop')">+</button>
-      <div class="form-container" id="shopForm">
-        <input type="text" id="shoppingItem" placeholder="Add item..." />
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
-      </div>
-    </div>
-
-    <div class="column narrow">
-      <div class="column-header">
-        Upcoming Events
-        <span class="column-count" id="eventCount">0</span>
-      </div>
-      <div class="card-list" id="eventList"></div>
-      <button class="add-btn" onclick="toggleForm('event')">+</button>
-      <div class="form-container" id="eventForm">
-        <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
-      </div>
-    </div>
+      <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
+    </footer>
   </div>
 
-  <footer>
-    <div class="sync-status" id="syncStatus" style="display:none">
-      <span class="dot" id="syncDot"></span>
-      <span id="syncText">Loading</span>
+  <!-- Personal Task Page -->
+  <div class="task-page" id="taskPage">
+    <div class="task-page-header">
+      <a class="task-page-back" href="?">← Back</a>
+      <div class="task-page-title" id="taskPageTitle">My Tasks</div>
     </div>
-    <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
-  </footer>
+    <div class="task-page-list" id="taskPageList"></div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <h3>Manage Employees</h3>
+      <ul class="modal-employee-list" id="employeeList"></ul>
+      <button class="modal-add-btn" onclick="addEmployee()">+ Add Employee</button>
+      <button class="modal-close" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
 
-    const EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
+    const DEFAULT_EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
 
     let state = {
+      employees: [...DEFAULT_EMPLOYEES],
       announcements: [],
       todos: [],
       dailyInfo: {
@@ -609,11 +868,50 @@
     let cloudSaving = false;
     let cloudSaveQueue = [];
 
+    // Check for personal task page
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskUser = urlParams.get('user');
+
+    if (taskUser) {
+      document.getElementById('boardContainer').classList.remove('active');
+      document.getElementById('taskPage').classList.add('active');
+      document.getElementById('taskPageTitle').textContent = `${taskUser}'s Tasks`;
+    }
+
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
     loadData();
+
+    function generateEmployeeOptions(selected) {
+      return '<option value="">--</option>' + state.employees.map(e =>
+        `<option value="${e}" ${e === selected ? 'selected' : ''}>${e}</option>`
+      ).join('');
+    }
+
+    function generateAssigneeChips() {
+      return `<span class="assignee-chip all-chip" data-value="All" onclick="toggleAssignee(this)">All</span>` +
+        state.employees.map(e =>
+          `<span class="assignee-chip" data-value="${e}" onclick="toggleAssignee(this)">${e}</span>`
+        ).join('');
+    }
+
+    function updateAllDropdowns() {
+      document.getElementById('openAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.open_assignee);
+      document.getElementById('closeAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.close_assignee);
+      document.getElementById('announcementAuthor').innerHTML = generateEmployeeOptions();
+      document.getElementById('todoAuthor').innerHTML = generateEmployeeOptions();
+      document.getElementById('assigneeSelector').innerHTML = generateAssigneeChips();
+
+      // Update todo filter
+      const currentFilter = document.getElementById('todoFilter').value;
+      document.getElementById('todoFilter').innerHTML =
+        '<option value="all">All</option>' +
+        state.employees.map(e =>
+          `<option value="${e}" ${e === currentFilter ? 'selected' : ''}>${e}</option>`
+        ).join('');
+    }
 
     function toggleForm(type) {
       const formMap = { ann: 'annForm', todo: 'todoForm', shop: 'shopForm', event: 'eventForm' };
@@ -657,6 +955,7 @@
       const local = localStorage.getItem('shiftNote');
       if (local) {
         const parsed = JSON.parse(local);
+        state.employees = parsed.employees || [...DEFAULT_EMPLOYEES];
         state.announcements = parsed.announcements || [];
         state.todos = parsed.todos || [];
         state.dailyInfo = { ...state.dailyInfo, ...parsed.dailyInfo };
@@ -667,6 +966,7 @@
 
     function saveToLocal() {
       localStorage.setItem('shiftNote', JSON.stringify({
+        employees: state.employees,
         announcements: state.announcements,
         todos: state.todos,
         dailyInfo: state.dailyInfo
@@ -676,6 +976,7 @@
     function loadData() {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
         loadFromLocal();
+        updateAllDropdowns();
         render();
         updateSyncStatus('local');
         return;
@@ -683,6 +984,7 @@
 
       const hasLocal = loadFromLocal();
       if (hasLocal) {
+        updateAllDropdowns();
         render();
         updateSyncStatus('local');
       }
@@ -692,14 +994,14 @@
           .then(res => res.json())
           .then(handleCloudData)
           .catch(() => {
-            if (!hasLocal) { render(); }
+            if (!hasLocal) { updateAllDropdowns(); render(); }
             updateSyncStatus('error');
           });
       } else {
         const script = document.createElement('script');
         script.src = APPS_SCRIPT_URL + '?callback=handleCloudData';
         script.onerror = function() {
-          if (!hasLocal) { render(); }
+          if (!hasLocal) { updateAllDropdowns(); render(); }
           updateSyncStatus('error');
         };
         document.body.appendChild(script);
@@ -710,6 +1012,9 @@
       const cloudAnn = data.announcements || [];
       const cloudTodos = data.todos || [];
       const cloudDaily = data.dailyInfo || {};
+      const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
+
+      state.employees = cloudEmployees;
 
       const annMap = {};
       state.announcements.forEach(a => annMap[a.id] = a);
@@ -736,7 +1041,9 @@
       }
 
       saveToLocal();
+      updateAllDropdowns();
       render();
+      if (taskUser) renderTaskPage();
       updateSyncStatus('cloud');
     }
 
@@ -751,6 +1058,7 @@
         try {
           const payload = JSON.stringify({
             action: 'saveAll',
+            employees: state.employees,
             announcements: state.announcements,
             todos: state.todos,
             dailyInfo: state.dailyInfo
@@ -856,12 +1164,14 @@
       todo.completed = !todo.completed;
       saveAll();
       render();
+      if (taskUser) renderTaskPage();
     }
 
     function deleteTodo(id) {
       state.todos = state.todos.filter(t => t.id !== id);
       saveAll();
       render();
+      if (taskUser) renderTaskPage();
     }
 
     function deleteAnnouncement(id) {
@@ -939,12 +1249,17 @@
         `).join('');
       }
 
+      const filter = document.getElementById('todoFilter').value;
+      const filteredTodos = filter === 'all'
+        ? state.todos
+        : state.todos.filter(t => t.assignees.includes(filter) || t.assignees.includes('All'));
+
       const todoList = document.getElementById('todoList');
-      document.getElementById('todoCount').textContent = state.todos.length;
-      if (state.todos.length === 0) {
-        todoList.innerHTML = '<div class="empty-state">No tasks yet</div>';
+      document.getElementById('todoCount').textContent = filteredTodos.length;
+      if (filteredTodos.length === 0) {
+        todoList.innerHTML = '<div class="empty-state">No tasks' + (filter !== 'all' ? ` for ${filter}` : ' yet') + '</div>';
       } else {
-        todoList.innerHTML = state.todos.map(t => `
+        todoList.innerHTML = filteredTodos.map(t => `
           <div class="card ${t.completed ? 'completed' : ''}">
             <div class="card-text">${escapeHtml(t.content)}</div>
             <div class="card-tags">
@@ -987,6 +1302,26 @@
       }
     }
 
+    function renderTaskPage() {
+      const list = document.getElementById('taskPageList');
+      const userTodos = state.todos.filter(t => t.assignees.includes(taskUser) || t.assignees.includes('All'));
+
+      if (userTodos.length === 0) {
+        list.innerHTML = '<div class="task-page-empty">No tasks assigned to you</div>';
+        return;
+      }
+
+      list.innerHTML = userTodos.map(t => `
+        <div class="task-page-item ${t.completed ? 'completed' : ''}">
+          <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo('${t.id}')" />
+          <div>
+            <div class="task-page-text">${escapeHtml(t.content)}</div>
+            <div class="task-page-meta">Added by ${t.author}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     function emailSnapshot() {
       const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -1027,6 +1362,60 @@
       const bodyEncoded = encodeURIComponent(body);
 
       window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+    }
+
+    // Settings Modal
+    function openSettings() {
+      document.getElementById('settingsModal').classList.add('active');
+      renderEmployeeList();
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+      saveAll();
+      updateAllDropdowns();
+      render();
+    }
+
+    function renderEmployeeList() {
+      const list = document.getElementById('employeeList');
+      list.innerHTML = state.employees.map((e, i) => `
+        <li>
+          <input type="text" value="${escapeHtml(e)}" onchange="updateEmployee(${i}, this.value)" />
+          <button class="modal-delete-btn" onclick="deleteEmployee(${i})">&times;</button>
+        </li>
+      `).join('');
+    }
+
+    function updateEmployee(index, newName) {
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      const oldName = state.employees[index];
+      state.employees[index] = trimmed;
+
+      // Update todos with old assignee name
+      state.todos.forEach(t => {
+        t.assignees = t.assignees.map(a => a === oldName ? trimmed : a);
+      });
+    }
+
+    function addEmployee() {
+      const name = prompt('Employee name:');
+      if (name && name.trim()) {
+        state.employees.push(name.trim());
+        renderEmployeeList();
+      }
+    }
+
+    function deleteEmployee(index) {
+      if (state.employees.length <= 1) {
+        showToast('Need at least one employee');
+        return;
+      }
+      if (confirm(`Remove ${state.employees[index]}?`)) {
+        state.employees.splice(index, 1);
+        renderEmployeeList();
+      }
     }
 
     function escapeHtml(text) {
