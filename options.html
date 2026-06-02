@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shift Info Layout Options</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oxygen:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Oxygen', sans-serif;
+      background-color: #FFF8F0;
+      color: #3A3632;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      color: #34524F;
+      margin: 40px 0 12px;
+    }
+
+    h2:first-child { margin-top: 0; }
+
+    .option-label {
+      font-size: 0.85rem;
+      color: #3A3632;
+      opacity: 0.5;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* ===== Option A: Single Slim Row ===== */
+    .option-a {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0.8vh 20px;
+      background: #34524F;
+      border-radius: 1.2vh;
+      flex-wrap: wrap;
+    }
+
+    .option-a .field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .option-a label {
+      font-size: 1.3vh;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #D4CFC9;
+    }
+
+    .option-a input,
+    .option-a select {
+      padding: 0.5vh 10px;
+      border: none;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      background: rgba(255,255,255,0.15);
+      color: #FFFFFF;
+    }
+
+    .option-a input::placeholder { color: rgba(255,255,255,0.4); }
+    .option-a input:focus, .option-a select:focus { outline: none; background: rgba(255,255,255,0.25); }
+    .option-a input[type="text"] { width: 90px; }
+    .option-a input[type="number"] { width: 60px; text-align: center; }
+    .option-a select { min-width: 70px; cursor: pointer; }
+    .option-a select option { color: #3A3632; background: #FFF; }
+
+    .option-a .btn-save {
+      padding: 0.5vh 12px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 0.8vh;
+      background: transparent;
+      color: #FFF;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.2vh;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .option-a .btn-save:hover { background: rgba(255,255,255,0.15); }
+
+    .option-a .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* ===== Option B: Two Groups ===== */
+    .option-b {
+      display: flex;
+      background: #34524F;
+      border-radius: 1.2vh;
+      overflow: hidden;
+    }
+
+    .option-b .group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.8vh 16px;
+    }
+
+    .option-b .group:first-child {
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .option-b label {
+      font-size: 1.3vh;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #D4CFC9;
+    }
+
+    .option-b input,
+    .option-b select {
+      padding: 0.5vh 10px;
+      border: none;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      background: rgba(255,255,255,0.15);
+      color: #FFFFFF;
+    }
+
+    .option-b input::placeholder { color: rgba(255,255,255,0.4); }
+    .option-b input:focus, .option-b select:focus { outline: none; background: rgba(255,255,255,0.25); }
+    .option-b input[type="text"] { width: 90px; }
+    .option-b input[type="number"] { width: 60px; text-align: center; }
+    .option-b select { min-width: 70px; cursor: pointer; }
+    .option-b select option { color: #3A3632; background: #FFF; }
+
+    .option-b .btn-save {
+      padding: 0.5vh 12px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 0.8vh;
+      background: transparent;
+      color: #FFF;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.2vh;
+      cursor: pointer;
+    }
+
+    .option-b .btn-save:hover { background: rgba(255,255,255,0.15); }
+
+    /* ===== Option C: No Labels ===== */
+    .option-c {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6vh 16px;
+      background: #34524F;
+      border-radius: 1.2vh;
+      flex-wrap: wrap;
+    }
+
+    .option-c input,
+    .option-c select {
+      padding: 0.6vh 12px;
+      border: none;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      background: rgba(255,255,255,0.15);
+      color: #FFFFFF;
+    }
+
+    .option-c input::placeholder { color: rgba(255,255,255,0.4); }
+    .option-c input:focus, .option-c select:focus { outline: none; background: rgba(255,255,255,0.25); }
+    .option-c input[type="text"] { width: 130px; }
+    .option-c input[type="number"] { width: 72px; text-align: center; }
+    .option-c select { min-width: 80px; cursor: pointer; }
+    .option-c select option { color: #3A3632; background: #FFF; }
+
+    .option-c .btn-save {
+      padding: 0.5vh 14px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 0.8vh;
+      background: transparent;
+      color: #FFF;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.2vh;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .option-c .btn-save:hover { background: rgba(255,255,255,0.15); }
+
+    .spacer { height: 30px; }
+  </style>
+</head>
+<body>
+
+  <div class="option-label">Option A — Single slim row, labels inline, save on right</div>
+  <div class="option-a">
+    <div class="field">
+      <label>Folks:</label>
+      <input type="text" placeholder="e.g., BBAE" />
+    </div>
+    <div class="divider"></div>
+    <div class="field">
+      <label>Open:</label>
+      <input type="number" value="250" />
+      <select>
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Close:</label>
+      <input type="number" value="250" />
+      <select>
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+    </div>
+    <button class="btn-save">Save</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="option-label">Option B — Two groups with divider, folks left / register right</div>
+  <div class="option-b">
+    <div class="group">
+      <label>Folks:</label>
+      <input type="text" placeholder="e.g., BBAE" />
+      <button class="btn-save">Save</button>
+    </div>
+    <div class="group">
+      <label>Open:</label>
+      <input type="number" value="250" />
+      <select>
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+      <label>Close:</label>
+      <input type="number" value="250" />
+      <select>
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+      <button class="btn-save">Save</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="option-label">Option C — No labels, just placeholders, most compact</div>
+  <div class="option-c">
+    <input type="text" placeholder="Folks working..." />
+    <input type="number" value="250" placeholder="$ Open" />
+    <select>
+      <option value="">Open assignee</option>
+      <option value="Ash">Ash</option>
+      <option value="Brett">Brett</option>
+      <option value="Dom">Dom</option>
+      <option value="Emma">Emma</option>
+      <option value="Emily">Emily</option>
+      <option value="Lena">Lena</option>
+    </select>
+    <input type="number" value="250" placeholder="$ Close" />
+    <select>
+      <option value="">Close assignee</option>
+      <option value="Ash">Ash</option>
+      <option value="Brett">Brett</option>
+      <option value="Dom">Dom</option>
+      <option value="Emma">Emma</option>
+      <option value="Emily">Emily</option>
+      <option value="Lena">Lena</option>
+    </select>
+    <button class="btn-save">Save</button>
+  </div>
+
+</body>
+</html>
