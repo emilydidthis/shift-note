@@ -26,11 +26,10 @@
 
     header {
       background: transparent;
-      padding: 1.8vh 20px;
+      padding: 1.8vh 20px 0;
       display: flex;
       align-items: center;
       gap: 18px;
-      flex-wrap: wrap;
       flex-shrink: 0;
     }
 
@@ -48,21 +47,22 @@
       letter-spacing: 0.3px;
     }
 
-    .header-meta {
+    .shift-info {
       display: flex;
       align-items: center;
       gap: 16px;
+      padding: 1.2vh 20px;
       flex-wrap: wrap;
-      flex: 1;
+      flex-shrink: 0;
     }
 
-    .header-field {
+    .shift-field {
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .header-field label {
+    .shift-field label {
       font-size: 1.4vh;
       text-transform: uppercase;
       letter-spacing: 0.8px;
@@ -70,8 +70,8 @@
       opacity: 0.5;
     }
 
-    .header-field input,
-    .header-field select {
+    .shift-field input,
+    .shift-field select {
       padding: 0.8vh 12px;
       border: none;
       border-radius: 1vh;
@@ -82,22 +82,15 @@
       transition: background-color 0.2s;
     }
 
-    .header-field input:focus,
-    .header-field select:focus {
+    .shift-field input:focus,
+    .shift-field select:focus {
       outline: none;
       background-color: #EDE8E0;
     }
 
-    .header-field input[type="text"] { width: 100px; }
-    .header-field input[type="number"] { width: 72px; text-align: center; }
-    .header-field select { cursor: pointer; min-width: 80px; }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-left: auto;
-    }
+    .shift-field input[type="text"] { width: 100px; }
+    .shift-field input[type="number"] { width: 72px; text-align: center; }
+    .shift-field select { cursor: pointer; min-width: 80px; }
 
     .btn {
       padding: 1vh 18px;
@@ -156,10 +149,19 @@
     .board {
       display: flex;
       gap: 16px;
-      padding: 1.2vh 20px 1.8vh;
+      padding: 1.2vh 20px;
       overflow-x: auto;
       flex: 1;
       align-items: flex-start;
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2vh 20px;
+      flex-shrink: 0;
+      background: transparent;
     }
 
     .column {
@@ -447,48 +449,42 @@
       <h1>The Whispering Shelf</h1>
       <div class="date" id="currentDate"></div>
     </div>
-    <div class="header-meta">
-      <div class="header-field">
-        <label>Folks:</label>
-        <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
-        <button class="btn btn-sm btn-ghost" onclick="updateDailyInfo('folks_working')">Save</button>
-      </div>
-      <div class="header-field">
-        <label>Open:</label>
-        <select id="openAssignee">
-          <option value="">--</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-        <input type="number" id="registerOpen" value="250" />
-      </div>
-      <div class="header-field">
-        <label>Close:</label>
-        <select id="closeAssignee">
-          <option value="">--</option>
-          <option value="Ash">Ash</option>
-          <option value="Brett">Brett</option>
-          <option value="Dom">Dom</option>
-          <option value="Emma">Emma</option>
-          <option value="Emily">Emily</option>
-          <option value="Lena">Lena</option>
-        </select>
-        <input type="number" id="registerClose" value="250" />
-        <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="sync-status" id="syncStatus" style="display:none">
-        <span class="dot" id="syncDot"></span>
-        <span id="syncText">Loading</span>
-      </div>
-      <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
-    </div>
   </header>
+
+  <div class="shift-info">
+    <div class="shift-field">
+      <label>Folks Working</label>
+      <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+      <button class="btn btn-sm btn-ghost" onclick="updateDailyInfo('folks_working')">Save</button>
+    </div>
+    <div class="shift-field">
+      <label>Open</label>
+      <select id="openAssignee">
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+      <input type="number" id="registerOpen" value="250" />
+    </div>
+    <div class="shift-field">
+      <label>Close</label>
+      <select id="closeAssignee">
+        <option value="">--</option>
+        <option value="Ash">Ash</option>
+        <option value="Brett">Brett</option>
+        <option value="Dom">Dom</option>
+        <option value="Emma">Emma</option>
+        <option value="Emily">Emily</option>
+        <option value="Lena">Lena</option>
+      </select>
+      <input type="number" id="registerClose" value="250" />
+      <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
+    </div>
+  </div>
 
   <div class="board">
     <div class="column">
@@ -570,6 +566,14 @@
       </div>
     </div>
   </div>
+
+  <footer>
+    <div class="sync-status" id="syncStatus" style="display:none">
+      <span class="dot" id="syncDot"></span>
+      <span id="syncText">Loading</span>
+    </div>
+    <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
+  </footer>
 
   <div class="toast" id="toast"></div>
 
