@@ -34,6 +34,18 @@
       gap: 20px;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     header .date {
       font-family: 'Lora', serif;
       font-size: 2.6vh;
@@ -43,11 +55,20 @@
       white-space: nowrap;
     }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .email-btn {
+      background: none;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: #FFF;
+      padding: 0.5vh 12px;
+      border-radius: 0.8vh;
+      font-family: 'Oxygen', sans-serif;
+      font-size: 1.4vh;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
+
+    .email-btn:hover { background: rgba(255,255,255,0.15); }
 
     .settings-btn {
       background: none;
@@ -187,11 +208,9 @@
     footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       padding: 1.2vh 20px;
       flex-shrink: 0;
       background: transparent;
-      gap: 14px;
     }
 
     .column {
@@ -199,7 +218,7 @@
       border-radius: 1.8vh;
       width: 340px;
       min-width: 280px;
-      max-height: calc(100vh - 90px);
+      max-height: calc(100vh - 100px);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -481,11 +500,21 @@
       background: #D4CFC9;
       color: #3A3632;
       font-family: 'Oxygen', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .tag.all {
       background: #D4B57A;
       color: #3A3632;
+    }
+
+    .tag-check {
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
+      accent-color: #34524F;
     }
 
     .card-delete {
@@ -507,25 +536,30 @@
     .card:hover .card-delete { opacity: 0.5; }
     .card-delete:hover { opacity: 1 !important; color: #B85C5C; }
 
-    .card-check {
-      margin-top: 7px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
+    .progress-bar-container {
+      margin-bottom: 8px;
     }
 
-    .card-check input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-      accent-color: #34524F;
+    .progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #D4CFC9;
+      border-radius: 2px;
+      overflow: hidden;
     }
 
-    .card-check label {
-      font-size: 1.3vh;
+    .progress-bar-fill {
+      height: 100%;
+      background: #34524F;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 1.1vh;
       color: #3A3632;
       opacity: 0.5;
-      cursor: pointer;
+      margin-top: 3px;
     }
 
     .empty-state {
@@ -561,7 +595,6 @@
 
     .toast.show { transform: translateY(0); opacity: 1; }
 
-    /* Settings Modal */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -676,7 +709,6 @@
 
     .modal-close:hover { background: #2a4240; }
 
-    /* Personal Task Page */
     .task-page {
       display: none;
       flex-direction: column;
@@ -785,10 +817,12 @@
   </style>
 </head>
 <body>
-  <!-- Board View -->
   <div class="board-container active" id="boardContainer">
     <header>
-      <div class="date" id="currentDate"></div>
+      <div class="header-left">
+        <div class="date" id="currentDate"></div>
+        <button class="email-btn" onclick="emailSnapshot()">Email</button>
+      </div>
       <div class="header-right">
         <div class="shift-info">
           <div class="shift-field">
@@ -885,11 +919,9 @@
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Loading</span>
       </div>
-      <button class="btn btn-primary" onclick="emailSnapshot()">Email Snapshot</button>
     </footer>
   </div>
 
-  <!-- Personal Task Page -->
   <div class="task-page" id="taskPage">
     <div class="task-page-header">
       <a class="task-page-back" href="?">← Back</a>
@@ -898,7 +930,6 @@
     <div class="task-page-list" id="taskPageList"></div>
   </div>
 
-  <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal">
       <h3>Manage Employees</h3>
@@ -912,7 +943,6 @@
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
-
     const DEFAULT_EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
 
     let state = {
@@ -934,7 +964,6 @@
     let cloudSaving = false;
     let cloudSaveQueue = [];
 
-    // Check for personal task page
     const urlParams = new URLSearchParams(window.location.search);
     const taskUser = urlParams.get('user');
 
@@ -970,7 +999,6 @@
       document.getElementById('todoAuthor').innerHTML = generateEmployeeOptions();
       document.getElementById('assigneeSelector').innerHTML = generateAssigneeChips();
 
-      // Update todo filter
       const currentFilter = document.getElementById('todoFilter').value;
       document.getElementById('todoFilter').innerHTML =
         '<option value="all">All</option>' +
@@ -1023,7 +1051,12 @@
         const parsed = JSON.parse(local);
         state.employees = parsed.employees || [...DEFAULT_EMPLOYEES];
         state.announcements = parsed.announcements || [];
-        state.todos = parsed.todos || [];
+        state.todos = (parsed.todos || []).map(t => {
+          if (t.completions) return t;
+          const completions = {};
+          t.assignees.forEach(a => completions[a] = false);
+          return { ...t, completions };
+        });
         state.dailyInfo = { ...state.dailyInfo, ...parsed.dailyInfo };
         return true;
       }
@@ -1076,7 +1109,12 @@
 
     function handleCloudData(data) {
       const cloudAnn = data.announcements || [];
-      const cloudTodos = data.todos || [];
+      const cloudTodos = (data.todos || []).map(t => {
+        if (t.completions) return t;
+        const completions = {};
+        t.assignees.forEach(a => completions[a] = false);
+        return { ...t, completions };
+      });
       const cloudDaily = data.dailyInfo || {};
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
 
@@ -1152,6 +1190,14 @@
       saveToCloud();
     }
 
+    function isTodoComplete(todo) {
+      return todo.assignees.length > 0 && todo.assignees.every(a => todo.completions[a]);
+    }
+
+    function getCompletionCount(todo) {
+      return todo.assignees.filter(a => todo.completions[a]).length;
+    }
+
     function toggleAssignee(el) {
       const value = el.dataset.value;
       if (value === 'All') {
@@ -1206,13 +1252,16 @@
       const author = document.getElementById('todoAuthor').value;
       if (!text || state.selectedAssignees.length === 0 || !author) { showToast('Fill in all fields and select assignee(s)'); return; }
 
+      const completions = {};
+      state.selectedAssignees.forEach(a => completions[a] = false);
+
       state.todos.unshift({
         id: Date.now().toString(),
         content: text,
         assignees: [...state.selectedAssignees],
+        completions,
         author,
-        timestamp: new Date().toISOString(),
-        completed: false
+        timestamp: new Date().toISOString()
       });
 
       saveAll();
@@ -1224,10 +1273,10 @@
       showToast('Task added');
     }
 
-    function toggleTodo(id) {
+    function toggleCompletion(id, assignee) {
       const todo = state.todos.find(t => t.id === id);
-      if (!todo) return;
-      todo.completed = !todo.completed;
+      if (!todo || !todo.completions) return;
+      todo.completions[assignee] = !todo.completions[assignee];
       saveAll();
       render();
       if (taskUser) renderTaskPage();
@@ -1420,7 +1469,16 @@
       if (!newText || newAssignees.length === 0) return;
 
       item.content = newText;
+
+      const oldAssignees = item.assignees;
       item.assignees = newAssignees;
+
+      const newCompletions = {};
+      newAssignees.forEach(a => {
+        newCompletions[a] = item.completions && item.completions[a] !== undefined ? item.completions[a] : false;
+      });
+      item.completions = newCompletions;
+
       saveAll();
       render();
       if (taskUser) renderTaskPage();
@@ -1464,21 +1522,36 @@
       if (filteredTodos.length === 0) {
         todoList.innerHTML = '<div class="empty-state">No tasks' + (filter !== 'all' ? ` for ${filter}` : ' yet') + '</div>';
       } else {
-        todoList.innerHTML = filteredTodos.map(t => `
-          <div class="card ${t.completed ? 'completed' : ''}" data-id="${t.id}">
-            <div class="card-text">${escapeHtml(t.content)}</div>
-            <div class="card-tags">
-              ${t.assignees.map(a => `<span class="tag ${a === 'All' ? 'all' : ''}">${a}</span>`).join('')}
+        todoList.innerHTML = filteredTodos.map(t => {
+          const complete = isTodoComplete(t);
+          const done = getCompletionCount(t);
+          const total = t.assignees.length;
+          const pct = total > 0 ? (done / total) * 100 : 0;
+
+          const tagsHtml = t.assignees.map(a => {
+            const checked = t.completions && t.completions[a] ? 'checked' : '';
+            return `<span class="tag ${a === 'All' ? 'all' : ''}">
+              <input type="checkbox" class="tag-check" ${checked} onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')" />
+              ${a}
+            </span>`;
+          }).join('');
+
+          return `
+            <div class="card ${complete ? 'completed' : ''}" data-id="${t.id}">
+              <div class="progress-bar-container">
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${pct}%"></div>
+                </div>
+                <div class="progress-text">${done}/${total} completed</div>
+              </div>
+              <div class="card-text">${escapeHtml(t.content)}</div>
+              <div class="card-tags">${tagsHtml}</div>
+              <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
+              <button class="card-edit" onclick="editTodo('${t.id}')">✎</button>
+              <button class="card-delete" onclick="deleteTodo('${t.id}')">&times;</button>
             </div>
-            <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
-            <div class="card-check">
-              <input type="checkbox" id="check-${t.id}" ${t.completed ? 'checked' : ''} onchange="toggleTodo('${t.id}')" />
-              <label for="check-${t.id}">${t.completed ? 'Done' : 'Mark done'}</label>
-            </div>
-            <button class="card-edit" onclick="editTodo('${t.id}')">✎</button>
-            <button class="card-delete" onclick="deleteTodo('${t.id}')">&times;</button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
       const shopList = document.getElementById('shoppingList');
@@ -1519,15 +1592,21 @@
         return;
       }
 
-      list.innerHTML = userTodos.map(t => `
-        <div class="task-page-item ${t.completed ? 'completed' : ''}">
-          <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo('${t.id}')" />
-          <div>
-            <div class="task-page-text">${escapeHtml(t.content)}</div>
-            <div class="task-page-meta">Added by ${t.author}</div>
+      list.innerHTML = userTodos.map(t => {
+        const complete = isTodoComplete(t);
+        const done = getCompletionCount(t);
+        const total = t.assignees.length;
+
+        return `
+          <div class="task-page-item ${complete ? 'completed' : ''}">
+            <input type="checkbox" ${t.completions[taskUser] ? 'checked' : ''} onchange="toggleCompletion('${t.id}', '${taskUser}')" />
+            <div>
+              <div class="task-page-text">${escapeHtml(t.content)}</div>
+              <div class="task-page-meta">${done} of ${total} people completed</div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function emailSnapshot() {
@@ -1548,7 +1627,9 @@
 
       body += `\nTO-DO LIST:\n${'-'.repeat(30)}\n`;
       state.todos.forEach(t => {
-        const status = t.completed ? '[DONE]' : '[ ]';
+        const done = getCompletionCount(t);
+        const total = t.assignees.length;
+        const status = done === total ? '[DONE]' : `[${done}/${total}]`;
         const assignees = t.assignees.join(', ');
         body += `${status} [${assignees}] ${t.content} (by ${t.author})\n`;
       });
@@ -1572,7 +1653,6 @@
       window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
     }
 
-    // Settings Modal
     function openSettings() {
       document.getElementById('settingsModal').classList.add('active');
       renderEmployeeList();
@@ -1601,9 +1681,12 @@
       const oldName = state.employees[index];
       state.employees[index] = trimmed;
 
-      // Update todos with old assignee name
       state.todos.forEach(t => {
         t.assignees = t.assignees.map(a => a === oldName ? trimmed : a);
+        if (t.completions) {
+          t.completions[trimmed] = t.completions[oldName];
+          delete t.completions[oldName];
+        }
       });
     }
 
@@ -1621,7 +1704,14 @@
         return;
       }
       if (confirm(`Remove ${state.employees[index]}?`)) {
+        const removed = state.employees[index];
         state.employees.splice(index, 1);
+
+        state.todos.forEach(t => {
+          t.assignees = t.assignees.filter(a => a !== removed);
+          if (t.completions) delete t.completions[removed];
+        });
+
         renderEmployeeList();
       }
     }
