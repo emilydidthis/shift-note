@@ -690,17 +690,23 @@
       font-size: 14px;
       font-weight: 600;
       color: var(--text);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.15s;
     }
 
+    .goal-display:hover { background: var(--card-hover); }
+
     .goal-edit {
-      display: flex;
+      display: none;
       align-items: center;
       gap: 6px;
-      flex: 1;
+      flex-wrap: wrap;
     }
 
     .goal-edit input[type="number"] {
-      width: 80px;
+      width: 70px;
       padding: 4px 8px;
       border: none;
       border-radius: 6px;
@@ -728,23 +734,6 @@
       padding: 4px 10px;
       font-size: 12px;
     }
-
-    .goal-edit-btn {
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 2px 4px;
-      border-radius: 4px;
-      opacity: 0;
-      transition: all 0.15s;
-      flex-shrink: 0;
-      margin-left: auto;
-    }
-
-    .goal-card:hover .goal-edit-btn { opacity: 0.4; }
-    .goal-edit-btn:hover { opacity: 1 !important; color: var(--primary); }
 
     @media (max-width: 900px) {
       header { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -1048,14 +1037,13 @@
         <div class="card-list" id="announcementList">
           <div class="goal-card">
             <span class="goal-label">Goal</span>
-            <div class="goal-display" id="goalDisplay"></div>
-            <div class="goal-edit" id="goalEdit" style="display:none">
+            <div class="goal-display" id="goalDisplay" onclick="toggleGoalEdit()"></div>
+            <div class="goal-edit" id="goalEdit">
               <input type="number" id="goalCurrent" value="0" />
               <span class="goal-separator">/</span>
               <input type="number" id="goalTarget" value="45000" />
               <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
             </div>
-            <button class="goal-edit-btn" onclick="toggleGoalEdit()">✎</button>
           </div>
         </div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
@@ -1813,14 +1801,13 @@
       const goalHtml = `
         <div class="goal-card">
           <span class="goal-label">Goal</span>
-          <div class="goal-display">$${formatGoal(goalCurrent)} / $${formatGoal(goalTarget)}</div>
-          <div class="goal-edit" id="goalEdit" style="display:none">
+          <div class="goal-display" onclick="toggleGoalEdit()">$${formatGoal(goalCurrent)} / $${formatGoal(goalTarget)}</div>
+          <div class="goal-edit" id="goalEdit">
             <input type="number" id="goalCurrent" value="${goalCurrent}" />
             <span class="goal-separator">/</span>
             <input type="number" id="goalTarget" value="${goalTarget}" />
             <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
           </div>
-          <button class="goal-edit-btn" onclick="toggleGoalEdit()">✎</button>
         </div>`;
 
       const annHtml = state.announcements.length === 0
@@ -2112,11 +2099,11 @@
     }
 
     function toggleGoalEdit() {
-      const card = document.querySelector('.goal-card');
       const editEl = document.getElementById('goalEdit');
       const displayEl = document.getElementById('goalDisplay');
-      const labelEl = card.querySelector('.goal-label');
-      if (editEl.style.display === 'none') {
+      const labelEl = document.querySelector('.goal-label');
+      const isEditing = editEl.style.display !== 'none';
+      if (!isEditing) {
         editEl.style.display = 'flex';
         displayEl.style.display = 'none';
         labelEl.style.display = 'none';
