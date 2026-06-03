@@ -73,20 +73,22 @@
       white-space: nowrap;
     }
 
-    .email-btn {
+    .header-icon-btn {
       background: none;
-      border: 1.5px solid rgba(255,255,255,0.3);
-      color: var(--white);
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-family: var(--font-sans);
-      font-size: 14px;
+      border: none;
+      color: rgba(255,255,255,0.6);
       cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
       transition: all 0.2s;
-      white-space: nowrap;
+      display: flex;
+      align-items: center;
     }
 
-    .email-btn:hover { background: rgba(255,255,255,0.15); }
+    .header-icon-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: var(--white);
+    }
 
     .settings-btn {
       background: none;
@@ -996,7 +998,12 @@
     <header>
       <div class="header-left">
         <div class="date" id="currentDate"></div>
-        <button class="email-btn" onclick="emailSnapshot()">Email</button>
+        <button class="header-icon-btn" onclick="emailSnapshot()" title="Email Snapshot">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m22 2-7 20-4-9-9-4z"/>
+            <path d="m22 2-11 11"/>
+          </svg>
+        </button>
         <div class="goal-card">
           <span class="goal-label">Goal</span>
           <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
@@ -1009,12 +1016,12 @@
         <div class="shift-info">
           <div class="shift-field">
             <label>Folks:</label>
-            <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+            <input type="text" id="folksWorking" placeholder="e.g., BBAE" onchange="autoSaveRegisters()" />
           </div>
           <div class="shift-divider"></div>
           <div class="shift-field">
             <label>Open:</label>
-            <input type="number" id="registerOpen" value="250" />
+            <input type="number" id="registerOpen" value="250" onchange="autoSaveRegisters()" />
             <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
               <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
               <span class="assignee-dropdown-arrow">▾</span>
@@ -1023,15 +1030,20 @@
           </div>
           <div class="shift-field">
             <label>Close:</label>
-            <input type="number" id="registerClose" value="250" />
+            <input type="number" id="registerClose" value="250" onchange="autoSaveRegisters()" />
             <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
               <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
               <span class="assignee-dropdown-arrow">▾</span>
               <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
             </div>
           </div>
-          <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
+        <button class="header-icon-btn" onclick="emailSnapshot()" title="Email Snapshot">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </button>
         <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -1241,6 +1253,7 @@
       else state.dailyInfo.close_assignee = value;
       renderAssigneeDropdown(type, value);
       document.querySelectorAll('.assignee-dropdown-menu').forEach(m => m.classList.remove('open'));
+      autoSaveRegisters();
     }
 
     document.addEventListener('click', function(e) {
@@ -1622,6 +1635,14 @@
       saveAll();
       render();
       showToast('Saved');
+    }
+
+    function autoSaveRegisters() {
+      state.dailyInfo.folks_working = document.getElementById('folksWorking').value.trim();
+      state.dailyInfo.register_open = document.getElementById('registerOpen').value;
+      state.dailyInfo.register_close = document.getElementById('registerClose').value;
+      saveAll();
+      render();
     }
 
     function addShoppingItem() {
