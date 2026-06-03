@@ -997,31 +997,39 @@
 
     loadData();
 
-    function generateEmployeeOptions(selected) {
+    function getInitials(name) {
+      return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    function getFirstName(name) {
+      return name.split(' ')[0];
+    }
+
+    function generateEmployeeOptions(selected, displayFn) {
       return '<option value="">--</option>' + state.employees.map(e =>
-        `<option value="${e}" ${e === selected ? 'selected' : ''}>${e}</option>`
+        `<option value="${e}" ${e === selected ? 'selected' : ''}>${displayFn ? displayFn(e) : e}</option>`
       ).join('');
     }
 
     function generateAssigneeChips() {
       return `<span class="assignee-chip all-chip" data-value="All" onclick="toggleAssignee(this)">All</span>` +
         state.employees.map(e =>
-          `<span class="assignee-chip" data-value="${e}" onclick="toggleAssignee(this)">${e}</span>`
+          `<span class="assignee-chip" data-value="${e}" onclick="toggleAssignee(this)">${getFirstName(e)}</span>`
         ).join('');
     }
 
     function updateAllDropdowns() {
-      document.getElementById('openAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.open_assignee);
-      document.getElementById('closeAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.close_assignee);
-      document.getElementById('announcementAuthor').innerHTML = generateEmployeeOptions();
-      document.getElementById('todoAuthor').innerHTML = generateEmployeeOptions();
+      document.getElementById('openAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.open_assignee, getInitials);
+      document.getElementById('closeAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.close_assignee, getInitials);
+      document.getElementById('announcementAuthor').innerHTML = generateEmployeeOptions('', getFirstName);
+      document.getElementById('todoAuthor').innerHTML = generateEmployeeOptions('', getFirstName);
       document.getElementById('assigneeSelector').innerHTML = generateAssigneeChips();
 
       const currentFilter = document.getElementById('todoFilter').value;
       document.getElementById('todoFilter').innerHTML =
         '<option value="all">All</option>' +
         state.employees.map(e =>
-          `<option value="${e}" ${e === currentFilter ? 'selected' : ''}>${e}</option>`
+          `<option value="${e}" ${e === currentFilter ? 'selected' : ''}>${getFirstName(e)}</option>`
         ).join('');
     }
 
@@ -1566,7 +1574,7 @@
               <div class="avatar">${getInitials(a.author)}</div>
               <div class="card-body">
                 <div class="card-text">${escapeHtml(a.content)}</div>
-                <div class="card-meta">${a.author} - ${formatTime(a.timestamp)}</div>
+                <div class="card-meta">${getFirstName(a.author)} - ${formatTime(a.timestamp)}</div>
               </div>
             </div>
             <button class="card-edit" onclick="editAnnouncement('${a.id}')">✎</button>
@@ -1595,7 +1603,7 @@
             const isDone = t.completions && t.completions[a];
             return `<div class="avatar ${isDone ? 'done' : 'pending'}"
                  onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')"
-                 title="${a}: ${isDone ? 'Done' : 'Pending'}">
+                 title="${getFirstName(a)}: ${isDone ? 'Done' : 'Pending'}">
               ${getInitials(a)}
             </div>`;
           }).join('');
@@ -1618,7 +1626,7 @@
                 <div class="todo-card-body">
                   <div class="card-text">${escapeHtml(t.content)}</div>
                   ${progressHtml}
-                  <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
+                  <div class="card-meta">Added by ${getFirstName(t.author)} - ${formatTime(t.timestamp)}</div>
                 </div>
                 <div class="avatar-stack">${avatarsHtml}</div>
               </div>
@@ -1696,7 +1704,7 @@
 
       body += `ANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
       state.announcements.forEach(a => {
-        body += `- ${a.content} (${a.author})\n`;
+        body += `- ${a.content} (${getFirstName(a.author)})\n`;
       });
       if (state.announcements.length === 0) body += '(none)\n';
 
@@ -1705,8 +1713,8 @@
         const done = getCompletionCount(t);
         const total = t.assignees.length;
         const status = done === total ? '[DONE]' : `[${done}/${total}]`;
-        const assignees = t.assignees.join(', ');
-        body += `${status} [${assignees}] ${t.content} (by ${t.author})\n`;
+        const assignees = t.assignees.map(a => getFirstName(a)).join(', ');
+        body += `${status} [${assignees}] ${t.content} (by ${getFirstName(t.author)})\n`;
       });
       if (state.todos.length === 0) body += '(none)\n';
 
