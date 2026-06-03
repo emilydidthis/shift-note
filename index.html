@@ -1169,12 +1169,17 @@
     let cloudSaveQueue = [];
 
     const urlParams = new URLSearchParams(window.location.search);
-    const taskUser = urlParams.get('user');
+    let taskUser = urlParams.get('user');
+
+    function resolveEmployee(displayName) {
+      if (!displayName) return '';
+      if (state.employees.includes(displayName)) return displayName;
+      return state.employees.find(e => getFirstName(e) === displayName) || displayName;
+    }
 
     if (taskUser) {
       document.getElementById('boardContainer').classList.remove('active');
       document.getElementById('taskPage').classList.add('active');
-      document.getElementById('taskPageTitle').textContent = `${taskUser}'s Tasks`;
     }
 
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
@@ -1803,6 +1808,11 @@
     }
 
     function render() {
+      if (taskUser) {
+        taskUser = resolveEmployee(taskUser);
+        document.getElementById('taskPageTitle').textContent = `${getFirstName(taskUser)}'s Tasks`;
+      }
+
       document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
       document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
       document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
@@ -1838,9 +1848,10 @@
       annList.innerHTML = annHtml;
 
       const filter = document.getElementById('todoFilter').value;
+      const filterResolved = filter !== 'all' ? resolveEmployee(filter) : '';
       const filteredTodos = filter === 'all'
         ? state.todos
-        : state.todos.filter(t => t.assignees.includes(filter) || t.assignees.includes('All'));
+        : state.todos.filter(t => t.assignees.includes(filterResolved) || t.assignees.includes('All'));
 
       const todoList = document.getElementById('todoList');
       document.getElementById('todoCount').textContent = filteredTodos.length;
@@ -1852,6 +1863,11 @@
           const done = getCompletionCount(t);
           const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
           const pct = total > 0 ? (done / total) * 100 : 0;
+
+          const filterChecked = filterResolved ? (t.completions && t.completions[filterResolved]) : complete;
+          const filterCheckboxHtml = filterResolved
+            ? `<input type="checkbox" class="todo-checkbox" ${filterChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${filterResolved}')" />`
+            : `<input type="checkbox" class="todo-checkbox" ${complete ? 'checked' : ''} onclick="event.stopPropagation(); toggleTodoCompletion('${t.id}')" />`;
 
           const displayAssignees = t.assignees.includes('All')
             ? state.employees
@@ -1886,9 +1902,7 @@
           return `
             <div class="card ${complete ? 'completed' : ''}" data-id="${t.id}">
               <div class="todo-card-row">
-                <input type="checkbox" class="todo-checkbox"
-                       ${complete ? 'checked' : ''}
-                       onclick="event.stopPropagation(); toggleTodoCompletion('${t.id}')" />
+                ${filterCheckboxHtml}
                 <div class="todo-card-body">
                   <div class="card-text">${escapeHtml(t.content)}</div>
                   ${progressHtml}
@@ -1960,10 +1974,11 @@
         const complete = isTodoComplete(t);
         const done = getCompletionCount(t);
         const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
+        const userDone = t.completions && t.completions[taskUser];
 
         return `
           <div class="task-page-item ${complete ? 'completed' : ''}">
-            <input type="checkbox" ${t.completions[taskUser] ? 'checked' : ''} onchange="toggleCompletion('${t.id}', '${taskUser}')" />
+            <input type="checkbox" ${userDone ? 'checked' : ''} onchange="toggleCompletion('${t.id}', '${taskUser}')" />
             <div>
               <div class="task-page-text">${escapeHtml(t.content)}</div>
               <div class="task-page-meta">${done} of ${total} people completed</div>
