@@ -408,21 +408,22 @@
     .card {
       background: var(--card-bg);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 12px 36px 12px 14px;
       margin-bottom: 10px;
       position: relative;
       transition: background 0.15s;
     }
 
-    .card:hover { background: var(--card-hover); }
-    .card.completed { opacity: 0.6; }
-    .card.completed .card-text { text-decoration: line-through; }
-
     .card-menu {
       position: absolute;
       top: 8px;
       right: 8px;
+      z-index: 5;
     }
+
+    .card:hover { background: var(--card-hover); }
+    .card.completed { opacity: 0.6; }
+    .card.completed .card-text { text-decoration: line-through; }
 
     .card-menu-btn {
       background: none;
