@@ -2039,8 +2039,7 @@
           <button class="modal-delete-btn" onclick="deleteEmployee(${i})">&times;</button>
         </li>
         `).join('');
-
-      annList.innerHTML = goalHtml + annHtml;
+    }
 
     function updateEmployee(index, newName) {
       const trimmed = newName.trim();
