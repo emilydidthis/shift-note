@@ -656,22 +656,17 @@
       margin-top: 3px;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--text);
-      opacity: 0.4;
-      font-size: 14px;
-      font-style: italic;
+    /* ===== GOAL BAR ===== */
+    .goal-bar {
+      padding: 10px 20px 0;
+      flex-shrink: 0;
     }
 
-    /* ===== GOAL CARD ===== */
     .goal-card {
       background: var(--card-bg);
       border-radius: 12px;
       padding: 6px 10px;
-      margin-bottom: 10px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 2px;
     }
@@ -731,6 +726,27 @@
       opacity: 0.4;
       font-weight: 600;
       margin-left: 1px;
+    }
+
+    .column-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--text);
+      opacity: 0.4;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    /* ===== GOAL BAR ===== */
+    .goal-bar {
+      padding: 10px 20px 0;
+      flex-shrink: 0;
     }
 
     @media (max-width: 900px) {
@@ -1024,6 +1040,16 @@
       </div>
     </header>
 
+    <div class="goal-bar" id="goalBar">
+      <div class="goal-card">
+        <span class="goal-label">Goal</span>
+        <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
+        <span class="goal-separator">/</span>
+        <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
+        <span class="goal-unit">k</span>
+      </div>
+    </div>
+
     <div class="board">
       <div class="column wide">
         <div class="column-header">
@@ -1032,15 +1058,7 @@
             <span class="column-count" id="annCount">0</span>
           </div>
         </div>
-        <div class="card-list" id="announcementList">
-          <div class="goal-card">
-            <span class="goal-label">Goal</span>
-            <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
-            <span class="goal-separator">/</span>
-            <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
-            <span class="goal-unit">k</span>
-          </div>
-        </div>
+        <div class="card-list" id="announcementList"></div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
         <div class="form-container" id="annForm">
           <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
@@ -1069,25 +1087,10 @@
         </div>
       </div>
 
-      <div class="column narrow">
+      <div class="column">
         <div class="column-header">
           <div class="column-header-left">
-            Shopping List
-            <span class="column-count" id="shopCount">0</span>
-          </div>
-        </div>
-        <div class="card-list" id="shoppingList"></div>
-        <button class="add-btn" onclick="toggleForm('shop')">+</button>
-        <div class="form-container" id="shopForm">
-          <input type="text" id="shoppingItem" placeholder="Add item..." />
-          <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
-        </div>
-      </div>
-
-      <div class="column narrow">
-        <div class="column-header">
-          <div class="column-header-left">
-            Upcoming Events
+            Events
             <span class="column-count" id="eventCount">0</span>
           </div>
         </div>
@@ -1096,6 +1099,19 @@
         <div class="form-container" id="eventForm">
           <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
+        </div>
+        <div class="column-divider"></div>
+        <div class="column-header">
+          <div class="column-header-left">
+            Shopping
+            <span class="column-count" id="shopCount">0</span>
+          </div>
+        </div>
+        <div class="card-list" id="shoppingList"></div>
+        <button class="add-btn" onclick="toggleForm('shop')">+</button>
+        <div class="form-container" id="shopForm">
+          <input type="text" id="shoppingItem" placeholder="Add item..." />
+          <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
         </div>
       </div>
     </div>
@@ -1784,23 +1800,13 @@
       document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
       document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
       document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
+      document.getElementById('goalCurrent').value = Math.round((state.dailyInfo.monthly_goal_current || 0) / 1000);
+      document.getElementById('goalTarget').value = Math.round((state.dailyInfo.monthly_goal_target || 45000) / 1000);
       renderAssigneeDropdown('open', state.dailyInfo.open_assignee || '');
       renderAssigneeDropdown('close', state.dailyInfo.close_assignee || '');
 
       const annList = document.getElementById('announcementList');
       document.getElementById('annCount').textContent = state.announcements.length;
-
-      const goalCurrent = state.dailyInfo.monthly_goal_current || 0;
-      const goalTarget = state.dailyInfo.monthly_goal_target || 45000;
-
-      const goalHtml = `
-        <div class="goal-card">
-          <span class="goal-label">Goal</span>
-          <input class="goal-input" type="number" value="${Math.round(goalCurrent / 1000)}" onchange="saveGoalValue('current', this.value)" />
-          <span class="goal-separator">/</span>
-          <input class="goal-input" type="number" value="${Math.round(goalTarget / 1000)}" onchange="saveGoalValue('target', this.value)" />
-          <span class="goal-unit">k</span>
-        </div>`;
 
       const annHtml = state.announcements.length === 0
         ? '<div class="empty-state">No announcements yet</div>'
@@ -1823,7 +1829,7 @@
           </div>
         `).join('');
 
-      annList.innerHTML = goalHtml + annHtml;
+      annList.innerHTML = annHtml;
 
       const filter = document.getElementById('todoFilter').value;
       const filteredTodos = filter === 'all'
