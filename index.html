@@ -1350,10 +1350,6 @@
       }
     }
 
-    function getInitials(name) {
-      return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-    }
-
     function addAnnouncement() {
       const text = document.getElementById('announcementText').value.trim();
       const author = document.getElementById('announcementAuthor').value;
