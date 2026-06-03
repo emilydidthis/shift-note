@@ -2013,11 +2013,10 @@
       });
       if (state.dailyInfo.events.length === 0) body += '(none)\n';
 
-      const subject = `Shift Note - ${date}`;
-      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const subject = encodeURIComponent(`Shift Note - ${date}`);
+      const bodyEncoded = encodeURIComponent(body);
 
-      console.log('Email length:', mailtoLink.length);
-      window.location.href = mailtoLink;
+      window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
     }
 
     function openSettings() {
