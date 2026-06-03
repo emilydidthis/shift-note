@@ -1244,7 +1244,12 @@
       const cloudDaily = data.dailyInfo || {};
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
 
-      state.employees = cloudEmployees;
+      // Merge employees: use whichever version is newer
+      const localEmpTimestamp = (state.employees && state.employees._updatedAt) || 0;
+      const cloudEmpTimestamp = (cloudEmployees && cloudEmployees._updatedAt) || 0;
+      if (cloudEmpTimestamp > localEmpTimestamp) {
+        state.employees = cloudEmployees;
+      }
 
       const annMap = {};
       state.announcements.forEach(a => annMap[a.id] = a);
@@ -1310,6 +1315,7 @@
       const now = Date.now();
       state.announcements = state.announcements.map(a => ({ ...a, updatedAt: now }));
       state.todos = state.todos.map(t => ({ ...t, updatedAt: now }));
+      state.employees._updatedAt = now;
       state.dailyInfo._updatedAt = now;
 
       saveToLocal();

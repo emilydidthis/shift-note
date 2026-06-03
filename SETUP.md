@@ -93,7 +93,10 @@ function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   
   if (data.action === 'saveAll') {
-    if (data.employees) saveData('employees', data.employees);
+    if (data.employees) {
+      data.employees._updatedAt = new Date().getTime();
+      saveData('employees', data.employees);
+    }
     saveData('announcements', data.announcements);
     saveData('todos', data.todos);
     saveData('dailyInfo', data.dailyInfo);
@@ -162,3 +165,7 @@ All data syncs to your Google Sheet automatically. The sheet is created on first
 **CORS errors**
 - Make sure you deployed as a Web app with "Anyone" access
 - The URL must end in `/exec`, not `/dev`
+
+**Employee names not syncing**
+- After updating the Apps Script, you MUST re-deploy (Deploy → Manage deployments → Edit → New version)
+- The frontend uses timestamps to determine which version is newer
