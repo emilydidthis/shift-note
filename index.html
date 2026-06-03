@@ -420,6 +420,55 @@
       align-items: flex-start;
     }
 
+    .todo-card-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .todo-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .avatar-stack {
+      display: flex;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .avatar-stack .avatar {
+      width: 26px;
+      height: 26px;
+      font-size: 10px;
+      margin-left: -6px;
+      border: 2px solid var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .avatar-stack .avatar:first-child { margin-left: 0; }
+    .avatar-stack .avatar:hover { transform: translateY(-2px); }
+
+    .avatar-stack .avatar.done {
+      border-color: #4CAF50;
+      background: #2E7D32;
+    }
+
+    .avatar-stack .avatar.pending {
+      border-color: var(--text-muted);
+      opacity: 0.7;
+    }
+
     .avatar {
       width: 32px;
       height: 32px;
@@ -1231,6 +1280,18 @@
       if (taskUser) renderTaskPage();
     }
 
+    function toggleTodoCompletion(id) {
+      const todo = state.todos.find(t => t.id === id);
+      if (!todo || !todo.completions) return;
+      const allDone = isTodoComplete(todo);
+      todo.assignees.forEach(a => {
+        todo.completions[a] = !allDone;
+      });
+      saveAll();
+      render();
+      if (taskUser) renderTaskPage();
+    }
+
     function deleteTodo(id) {
       state.todos = state.todos.filter(t => t.id !== id);
       saveAll();
@@ -1477,25 +1538,37 @@
           const total = t.assignees.length;
           const pct = total > 0 ? (done / total) * 100 : 0;
 
-          const tagsHtml = t.assignees.map(a => {
-            const checked = t.completions && t.completions[a] ? 'checked' : '';
-            return `<span class="tag ${a === 'All' ? 'all' : ''}">
-              <input type="checkbox" class="tag-check" ${checked} onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')" />
-              ${a}
-            </span>`;
+          const avatarsHtml = t.assignees.map(a => {
+            const isDone = t.completions && t.completions[a];
+            return `<div class="avatar ${isDone ? 'done' : 'pending'}"
+                 onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')"
+                 title="${a}: ${isDone ? 'Done' : 'Pending'}">
+              ${getInitials(a)}
+            </div>`;
           }).join('');
+
+          const progressHtml = t.assignees.length > 1 ? `
+            <div class="progress-bar-container">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${pct}%"></div>
+              </div>
+              <div class="progress-text">${done}/${total} completed</div>
+            </div>
+          ` : '';
 
           return `
             <div class="card ${complete ? 'completed' : ''}" data-id="${t.id}">
-              <div class="progress-bar-container">
-                <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" style="width: ${pct}%"></div>
+              <div class="todo-card-row">
+                <input type="checkbox" class="todo-checkbox"
+                       ${complete ? 'checked' : ''}
+                       onclick="event.stopPropagation(); toggleTodoCompletion('${t.id}')" />
+                <div class="todo-card-body">
+                  <div class="card-text">${escapeHtml(t.content)}</div>
+                  ${progressHtml}
+                  <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
                 </div>
-                <div class="progress-text">${done}/${total} completed</div>
+                <div class="avatar-stack">${avatarsHtml}</div>
               </div>
-              <div class="card-text">${escapeHtml(t.content)}</div>
-              <div class="card-tags">${tagsHtml}</div>
-              <div class="card-meta">Added by ${t.author} - ${formatTime(t.timestamp)}</div>
               <button class="card-edit" onclick="editTodo('${t.id}')">✎</button>
               <button class="card-delete" onclick="deleteTodo('${t.id}')">&times;</button>
             </div>
