@@ -670,7 +670,6 @@
       border-radius: 12px;
       padding: 10px 14px;
       margin-bottom: 10px;
-      position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -685,42 +684,30 @@
       font-weight: 600;
     }
 
-    .goal-display {
+    .goal-input {
+      width: 70px;
+      padding: 2px 6px;
+      border: none;
+      border-radius: 4px;
+      border-bottom: 1.5px solid transparent;
       font-family: var(--font-sans);
       font-size: 14px;
       font-weight: 600;
-      color: var(--text);
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 4px;
-      transition: background 0.15s;
-    }
-
-    .goal-display:hover { background: var(--card-hover); }
-
-    .goal-edit {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .goal-edit input[type="number"] {
-      width: 70px;
-      padding: 4px 8px;
-      border: none;
-      border-radius: 6px;
-      font-family: var(--font-sans);
-      font-size: 13px;
-      background: var(--card-hover);
+      background: transparent;
       color: var(--text);
       text-align: center;
+      transition: all 0.15s;
     }
 
-    .goal-edit input[type="number"]:focus {
+    .goal-input:hover {
+      background: var(--card-hover);
+      border-bottom-color: var(--text-muted);
+    }
+
+    .goal-input:focus {
       outline: none;
       background: var(--white);
-      box-shadow: 0 0 0 1.5px var(--primary);
+      border-bottom-color: var(--primary);
     }
 
     .goal-separator {
@@ -728,11 +715,6 @@
       opacity: 0.3;
       font-size: 14px;
       font-weight: 600;
-    }
-
-    .goal-edit .btn {
-      padding: 4px 10px;
-      font-size: 12px;
     }
 
     @media (max-width: 900px) {
@@ -1037,13 +1019,9 @@
         <div class="card-list" id="announcementList">
           <div class="goal-card">
             <span class="goal-label">Goal</span>
-            <div class="goal-display" id="goalDisplay" onclick="toggleGoalEdit()"></div>
-            <div class="goal-edit" id="goalEdit">
-              <input type="number" id="goalCurrent" value="0" />
-              <span class="goal-separator">/</span>
-              <input type="number" id="goalTarget" value="45000" />
-              <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
-            </div>
+            <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
+            <span class="goal-separator">/</span>
+            <input class="goal-input" type="number" id="goalTarget" value="45000" onchange="saveGoalValue('target', this.value)" />
           </div>
         </div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
@@ -1801,13 +1779,9 @@
       const goalHtml = `
         <div class="goal-card">
           <span class="goal-label">Goal</span>
-          <div class="goal-display" onclick="toggleGoalEdit()">$${formatGoal(goalCurrent)} / $${formatGoal(goalTarget)}</div>
-          <div class="goal-edit" id="goalEdit">
-            <input type="number" id="goalCurrent" value="${goalCurrent}" />
-            <span class="goal-separator">/</span>
-            <input type="number" id="goalTarget" value="${goalTarget}" />
-            <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
-          </div>
+          <input class="goal-input" type="number" value="${goalCurrent}" onchange="saveGoalValue('current', this.value)" />
+          <span class="goal-separator">/</span>
+          <input class="goal-input" type="number" value="${goalTarget}" onchange="saveGoalValue('target', this.value)" />
         </div>`;
 
       const annHtml = state.announcements.length === 0
@@ -2098,26 +2072,9 @@
       return n.toString();
     }
 
-    function toggleGoalEdit() {
-      const editEl = document.getElementById('goalEdit');
-      const displayEl = document.getElementById('goalDisplay');
-      const labelEl = document.querySelector('.goal-label');
-      const isEditing = editEl.style.display !== 'none';
-      if (!isEditing) {
-        editEl.style.display = 'flex';
-        displayEl.style.display = 'none';
-        labelEl.style.display = 'none';
-        editEl.querySelector('input').focus();
-      } else {
-        editEl.style.display = 'none';
-        displayEl.style.display = 'block';
-        labelEl.style.display = 'block';
-      }
-    }
-
-    function saveGoal() {
-      state.dailyInfo.monthly_goal_current = document.getElementById('goalCurrent').value;
-      state.dailyInfo.monthly_goal_target = document.getElementById('goalTarget').value;
+    function saveGoalValue(field, value) {
+      if (field === 'current') state.dailyInfo.monthly_goal_current = value;
+      else state.dailyInfo.monthly_goal_target = value;
       saveAll();
       render();
       showToast('Goal updated');
