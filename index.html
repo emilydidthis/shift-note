@@ -666,78 +666,85 @@
 
     /* ===== GOAL CARD ===== */
     .goal-card {
-      background: var(--primary);
+      background: var(--card-bg);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 10px 14px;
       margin-bottom: 10px;
       position: relative;
-      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .goal-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      opacity: 0.4;
+      font-weight: 600;
     }
 
     .goal-display {
-      font-family: var(--font-serif);
-      font-size: 20px;
+      font-family: var(--font-sans);
+      font-size: 14px;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      color: var(--text);
     }
 
     .goal-edit {
       display: flex;
       align-items: center;
       gap: 6px;
+      flex: 1;
     }
 
     .goal-edit input[type="number"] {
       width: 80px;
-      padding: 6px 8px;
+      padding: 4px 8px;
       border: none;
       border-radius: 6px;
       font-family: var(--font-sans);
-      font-size: 14px;
-      background: rgba(255,255,255,0.2);
-      color: var(--white);
+      font-size: 13px;
+      background: var(--card-hover);
+      color: var(--text);
       text-align: center;
     }
 
     .goal-edit input[type="number"]:focus {
       outline: none;
-      background: rgba(255,255,255,0.3);
-    }
-
-    .goal-edit input[type="number"]::placeholder {
-      color: rgba(255,255,255,0.4);
+      background: var(--white);
+      box-shadow: 0 0 0 1.5px var(--primary);
     }
 
     .goal-separator {
-      color: rgba(255,255,255,0.5);
-      font-size: 16px;
+      color: var(--text);
+      opacity: 0.3;
+      font-size: 14px;
       font-weight: 600;
     }
 
     .goal-edit .btn {
-      padding: 6px 12px;
+      padding: 4px 10px;
       font-size: 12px;
-      background: var(--accent);
-      color: var(--text);
     }
 
     .goal-edit-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
       background: none;
       border: none;
-      color: rgba(255,255,255,0.4);
+      color: var(--text);
       cursor: pointer;
       font-size: 14px;
       padding: 2px 4px;
       border-radius: 4px;
       opacity: 0;
       transition: all 0.15s;
+      flex-shrink: 0;
+      margin-left: auto;
     }
 
-    .goal-card:hover .goal-edit-btn { opacity: 0.7; }
-    .goal-edit-btn:hover { opacity: 1 !important; color: var(--white); }
+    .goal-card:hover .goal-edit-btn { opacity: 0.4; }
+    .goal-edit-btn:hover { opacity: 1 !important; color: var(--primary); }
 
     @media (max-width: 900px) {
       header { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -1039,7 +1046,8 @@
           </div>
         </div>
         <div class="card-list" id="announcementList">
-          <div class="goal-card" id="goalCard">
+          <div class="goal-card">
+            <span class="goal-label">Goal</span>
             <div class="goal-display" id="goalDisplay"></div>
             <div class="goal-edit" id="goalEdit" style="display:none">
               <input type="number" id="goalCurrent" value="0" />
@@ -1804,6 +1812,7 @@
 
       const goalHtml = `
         <div class="goal-card">
+          <span class="goal-label">Goal</span>
           <div class="goal-display">$${formatGoal(goalCurrent)} / $${formatGoal(goalTarget)}</div>
           <div class="goal-edit" id="goalEdit" style="display:none">
             <input type="number" id="goalCurrent" value="${goalCurrent}" />
@@ -2103,15 +2112,19 @@
     }
 
     function toggleGoalEdit() {
+      const card = document.querySelector('.goal-card');
       const editEl = document.getElementById('goalEdit');
       const displayEl = document.getElementById('goalDisplay');
+      const labelEl = card.querySelector('.goal-label');
       if (editEl.style.display === 'none') {
         editEl.style.display = 'flex';
         displayEl.style.display = 'none';
+        labelEl.style.display = 'none';
         editEl.querySelector('input').focus();
       } else {
         editEl.style.display = 'none';
         displayEl.style.display = 'block';
+        labelEl.style.display = 'block';
       }
     }
 
