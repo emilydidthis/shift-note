@@ -2016,7 +2016,9 @@
       const subject = encodeURIComponent(`Shift Note - ${date}`);
       const bodyEncoded = encodeURIComponent(body);
 
-      window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+      const link = document.createElement('a');
+      link.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+      link.click();
     }
 
     function openSettings() {
