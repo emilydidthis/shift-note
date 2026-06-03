@@ -685,8 +685,8 @@
     }
 
     .goal-input {
-      width: 70px;
-      padding: 2px 6px;
+      width: 36px;
+      padding: 2px 4px;
       border: none;
       border-radius: 4px;
       border-bottom: 1.5px solid transparent;
@@ -714,6 +714,13 @@
       color: var(--text);
       opacity: 0.3;
       font-size: 14px;
+      font-weight: 600;
+    }
+
+    .goal-unit {
+      font-size: 12px;
+      color: var(--text);
+      opacity: 0.4;
       font-weight: 600;
     }
 
@@ -1021,7 +1028,8 @@
             <span class="goal-label">Goal</span>
             <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
             <span class="goal-separator">/</span>
-            <input class="goal-input" type="number" id="goalTarget" value="45000" onchange="saveGoalValue('target', this.value)" />
+            <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
+            <span class="goal-unit">k</span>
           </div>
         </div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
@@ -1779,9 +1787,10 @@
       const goalHtml = `
         <div class="goal-card">
           <span class="goal-label">Goal</span>
-          <input class="goal-input" type="number" value="${goalCurrent}" onchange="saveGoalValue('current', this.value)" />
+          <input class="goal-input" type="number" value="${Math.round(goalCurrent / 1000)}" onchange="saveGoalValue('current', this.value)" />
           <span class="goal-separator">/</span>
-          <input class="goal-input" type="number" value="${goalTarget}" onchange="saveGoalValue('target', this.value)" />
+          <input class="goal-input" type="number" value="${Math.round(goalTarget / 1000)}" onchange="saveGoalValue('target', this.value)" />
+          <span class="goal-unit">k</span>
         </div>`;
 
       const annHtml = state.announcements.length === 0
@@ -1952,7 +1961,7 @@
       body += `FOLKS WORKING: ${state.dailyInfo.folks_working || 'Not set'}\n`;
       body += `OPENING: $${state.dailyInfo.register_open || 250} (${state.dailyInfo.open_assignee || '--'})\n`;
       body += `CLOSING: $${state.dailyInfo.register_close || 250} (${state.dailyInfo.close_assignee || '--'})\n`;
-      body += `MONTHLY GOAL: $${state.dailyInfo.monthly_goal_current || 0} / $${state.dailyInfo.monthly_goal_target || 45000}\n\n`;
+      body += `MONTHLY GOAL: $${formatGoal(state.dailyInfo.monthly_goal_current || 0)} / $${formatGoal(state.dailyInfo.monthly_goal_target || 45000)}\n\n`;
 
       body += `ANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
       state.announcements.forEach(a => {
@@ -2073,8 +2082,9 @@
     }
 
     function saveGoalValue(field, value) {
-      if (field === 'current') state.dailyInfo.monthly_goal_current = value;
-      else state.dailyInfo.monthly_goal_target = value;
+      const num = (parseInt(value) || 0) * 1000;
+      if (field === 'current') state.dailyInfo.monthly_goal_current = num;
+      else state.dailyInfo.monthly_goal_target = num;
       saveAll();
       render();
       showToast('Goal updated');
