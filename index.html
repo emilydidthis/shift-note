@@ -2030,8 +2030,11 @@
 
       const subject = encodeURIComponent(`Shift Note - ${date}`);
       const bodyEncoded = encodeURIComponent(body);
+      const mailtoLink = `mailto:?subject=${subject}&body=${bodyEncoded}`;
 
-      window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+      const a = document.createElement('a');
+      a.href = mailtoLink;
+      a.click();
     }
 
     function openSettings() {
