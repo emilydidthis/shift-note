@@ -1147,6 +1147,8 @@
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
     const DEFAULT_EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
 
+    let employeesUpdatedAt = 0;
+
     let state = {
       employees: [...DEFAULT_EMPLOYEES],
       announcements: [],
@@ -1316,7 +1318,13 @@
       const local = localStorage.getItem('shiftNote');
       if (local) {
         const parsed = JSON.parse(local);
-        state.employees = parsed.employees || [...DEFAULT_EMPLOYEES];
+        employeesUpdatedAt = parsed.employeesUpdatedAt || 0;
+        const cloudEmps = parsed.employees || [...DEFAULT_EMPLOYEES];
+        if (cloudEmps._updatedAt) {
+          employeesUpdatedAt = Math.max(employeesUpdatedAt, cloudEmps._updatedAt);
+          delete cloudEmps._updatedAt;
+        }
+        state.employees = cloudEmps;
         state.announcements = parsed.announcements || [];
         state.todos = (parsed.todos || []).map(t => {
           if (t.completions) return t;
@@ -1333,6 +1341,7 @@
     function saveToLocal() {
       localStorage.setItem('shiftNote', JSON.stringify({
         employees: state.employees,
+        employeesUpdatedAt: employeesUpdatedAt,
         announcements: state.announcements,
         todos: state.todos,
         dailyInfo: state.dailyInfo
@@ -1386,9 +1395,9 @@
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
 
       // Merge employees: use whichever version is newer
-      const localEmpTimestamp = (state.employees && state.employees._updatedAt) || 0;
-      const cloudEmpTimestamp = (cloudEmployees && cloudEmployees._updatedAt) || 0;
-      if (cloudEmpTimestamp > localEmpTimestamp) {
+      const cloudEmpTimestamp = cloudEmployees._updatedAt || 0;
+      if (cloudEmpTimestamp > employeesUpdatedAt) {
+        employeesUpdatedAt = cloudEmpTimestamp;
         state.employees = cloudEmployees;
       }
 
@@ -1446,6 +1455,7 @@
           });
           updateSyncStatus('cloud');
         } catch (e) {
+          console.error('Cloud save failed:', e);
           updateSyncStatus('error');
         }
       }
@@ -1456,7 +1466,7 @@
       const now = Date.now();
       state.announcements = state.announcements.map(a => ({ ...a, updatedAt: now }));
       state.todos = state.todos.map(t => ({ ...t, updatedAt: now }));
-      state.employees._updatedAt = now;
+      employeesUpdatedAt = now;
       state.dailyInfo._updatedAt = now;
 
       saveToLocal();
@@ -2034,7 +2044,11 @@
 
       const a = document.createElement('a');
       a.href = mailtoLink;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     }
 
     function openSettings() {
