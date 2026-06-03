@@ -1323,11 +1323,13 @@
     }
 
     function isTodoComplete(todo) {
-      return todo.assignees.length > 0 && todo.assignees.every(a => todo.completions[a]);
+      const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
+      return assignees.length > 0 && assignees.every(a => todo.completions[a]);
     }
 
     function getCompletionCount(todo) {
-      return todo.assignees.filter(a => todo.completions[a]).length;
+      const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
+      return assignees.filter(a => todo.completions[a]).length;
     }
 
     function toggleAssignee(el) {
@@ -1696,10 +1698,14 @@
         todoList.innerHTML = filteredTodos.map(t => {
           const complete = isTodoComplete(t);
           const done = getCompletionCount(t);
-          const total = t.assignees.length;
+          const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
           const pct = total > 0 ? (done / total) * 100 : 0;
 
-          const avatarsHtml = t.assignees.map(a => {
+          const displayAssignees = t.assignees.includes('All')
+            ? state.employees
+            : t.assignees;
+
+          const avatarsHtml = displayAssignees.map(a => {
             const isDone = t.completions && t.completions[a];
             return `<div class="avatar ${isDone ? 'done' : 'pending'}"
                  onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')"
@@ -1778,7 +1784,7 @@
       list.innerHTML = userTodos.map(t => {
         const complete = isTodoComplete(t);
         const done = getCompletionCount(t);
-        const total = t.assignees.length;
+        const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
 
         return `
           <div class="task-page-item ${complete ? 'completed' : ''}">
@@ -1811,10 +1817,11 @@
       body += `\nTO-DO LIST:\n${'-'.repeat(30)}\n`;
       state.todos.forEach(t => {
         const done = getCompletionCount(t);
-        const total = t.assignees.length;
+        const assignees = t.assignees.includes('All') ? state.employees : t.assignees;
+        const total = assignees.length;
         const status = done === total ? '[DONE]' : `[${done}/${total}]`;
-        const assignees = t.assignees.map(a => getFirstName(a)).join(', ');
-        body += `${status} [${assignees}] ${t.content} (by ${getFirstName(t.author)})\n`;
+        const assigneeNames = assignees.map(a => getFirstName(a)).join(', ');
+        body += `${status} [${assigneeNames}] ${t.content} (by ${getFirstName(t.author)})\n`;
       });
       if (state.todos.length === 0) body += '(none)\n';
 
