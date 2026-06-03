@@ -147,6 +147,62 @@
     .shift-field select { cursor: pointer; min-width: 70px; width: auto; white-space: nowrap; }
     .shift-field select option { color: var(--text); background: var(--white); }
 
+    .assignee-dropdown {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.15);
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--white);
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .assignee-dropdown:hover { background: rgba(255,255,255,0.25); }
+
+    .assignee-dropdown-display {
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .assignee-dropdown-arrow {
+      font-size: 10px;
+      opacity: 0.6;
+    }
+
+    .assignee-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: var(--white);
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      min-width: 100px;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .assignee-dropdown-menu.open { display: block; }
+
+    .assignee-dropdown-item {
+      padding: 8px 14px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .assignee-dropdown-item:hover { background: var(--card-bg); }
+    .assignee-dropdown-item.selected { background: var(--primary); color: var(--white); }
+
     .shift-divider {
       width: 1px;
       height: 24px;
@@ -848,12 +904,20 @@
           <div class="shift-field">
             <label>Open:</label>
             <input type="number" id="registerOpen" value="250" />
-            <select id="openAssignee"></select>
+            <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
+              <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
+              <span class="assignee-dropdown-arrow">▾</span>
+              <div class="assignee-dropdown-menu" id="openAssigneeMenu"></div>
+            </div>
           </div>
           <div class="shift-field">
             <label>Close:</label>
             <input type="number" id="registerClose" value="250" />
-            <select id="closeAssignee"></select>
+            <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
+              <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
+              <span class="assignee-dropdown-arrow">▾</span>
+              <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
+            </div>
           </div>
           <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
@@ -1023,8 +1087,8 @@
     }
 
     function updateAllDropdowns() {
-      document.getElementById('openAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.open_assignee, getInitials);
-      document.getElementById('closeAssignee').innerHTML = generateEmployeeOptions(state.dailyInfo.close_assignee, getInitials);
+      renderAssigneeDropdown('open', state.dailyInfo.open_assignee);
+      renderAssigneeDropdown('close', state.dailyInfo.close_assignee);
       document.getElementById('announcementAuthor').innerHTML = generateEmployeeOptions('', getFirstName);
       document.getElementById('todoAuthor').innerHTML = generateEmployeeOptions('', getFirstName);
       document.getElementById('assigneeSelector').innerHTML = generateAssigneeChips();
@@ -1036,6 +1100,38 @@
           `<option value="${e}" ${e === currentFilter ? 'selected' : ''}>${getFirstName(e)}</option>`
         ).join('');
     }
+
+    function renderAssigneeDropdown(type, selected) {
+      const displayEl = document.getElementById(`${type}AssigneeDisplay`);
+      const menuEl = document.getElementById(`${type}AssigneeMenu`);
+
+      displayEl.textContent = selected ? getInitials(selected) : '--';
+
+      menuEl.innerHTML = `<div class="assignee-dropdown-item ${!selected ? 'selected' : ''}" onclick="event.stopPropagation(); selectAssignee('${type}', '')">--</div>` +
+        state.employees.map(e =>
+          `<div class="assignee-dropdown-item ${e === selected ? 'selected' : ''}" onclick="event.stopPropagation(); selectAssignee('${type}', '${e}')">${getInitials(e)}</div>`
+        ).join('');
+    }
+
+    function toggleAssigneeDropdown(type) {
+      const menuEl = document.getElementById(`${type}AssigneeMenu`);
+      const isOpen = menuEl.classList.contains('open');
+      document.querySelectorAll('.assignee-dropdown-menu').forEach(m => m.classList.remove('open'));
+      if (!isOpen) menuEl.classList.add('open');
+    }
+
+    function selectAssignee(type, value) {
+      if (type === 'open') state.dailyInfo.open_assignee = value;
+      else state.dailyInfo.close_assignee = value;
+      renderAssigneeDropdown(type, value);
+      document.querySelectorAll('.assignee-dropdown-menu').forEach(m => m.classList.remove('open'));
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.assignee-dropdown')) {
+        document.querySelectorAll('.assignee-dropdown-menu').forEach(m => m.classList.remove('open'));
+      }
+    });
 
     function toggleForm(type) {
       const formMap = { ann: 'annForm', todo: 'todoForm', shop: 'shopForm', event: 'eventForm' };
@@ -1390,8 +1486,6 @@
       state.dailyInfo.folks_working = document.getElementById('folksWorking').value.trim();
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
-      state.dailyInfo.open_assignee = document.getElementById('openAssignee').value;
-      state.dailyInfo.close_assignee = document.getElementById('closeAssignee').value;
       saveAll();
       render();
       showToast('Saved');
@@ -1564,8 +1658,8 @@
       document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
       document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
       document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
-      document.getElementById('openAssignee').value = state.dailyInfo.open_assignee || '';
-      document.getElementById('closeAssignee').value = state.dailyInfo.close_assignee || '';
+      renderAssigneeDropdown('open', state.dailyInfo.open_assignee || '');
+      renderAssigneeDropdown('close', state.dailyInfo.close_assignee || '');
 
       const annList = document.getElementById('announcementList');
       document.getElementById('annCount').textContent = state.announcements.length;
