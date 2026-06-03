@@ -44,7 +44,7 @@
     /* ===== HEADER ===== */
     header {
       background: var(--primary);
-      padding: 12px 20px 40px;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -146,6 +146,13 @@
     .shift-field input[type="number"] { width: 60px; text-align: center; }
     .shift-field select { cursor: pointer; min-width: 70px; width: auto; white-space: nowrap; }
     .shift-field select option { color: var(--text); background: var(--white); }
+
+    .goal-field { gap: 4px; }
+    .goal-field input[type="number"] { width: 70px; text-align: center; }
+    .goal-separator {
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+    }
 
     .assignee-dropdown {
       position: relative;
@@ -944,9 +951,21 @@
               <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
             </div>
           </div>
+          <div class="shift-divider"></div>
+          <div class="shift-field goal-field">
+            <label>Goal:</label>
+            <input type="number" id="goalCurrent" value="0" />
+            <span class="goal-separator">/</span>
+            <input type="number" id="goalTarget" value="45000" />
+          </div>
           <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
-        <button class="settings-btn" onclick="openSettings()" title="Settings">⚙</button>
+        <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -1062,6 +1081,8 @@
         register_close: 250,
         open_assignee: '',
         close_assignee: '',
+        monthly_goal_current: 0,
+        monthly_goal_target: 45000,
         shopping_list: [],
         events: []
       },
@@ -1528,6 +1549,8 @@
       state.dailyInfo.folks_working = document.getElementById('folksWorking').value.trim();
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
+      state.dailyInfo.monthly_goal_current = document.getElementById('goalCurrent').value;
+      state.dailyInfo.monthly_goal_target = document.getElementById('goalTarget').value;
       saveAll();
       render();
       showToast('Saved');
@@ -1700,6 +1723,8 @@
       document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
       document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
       document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
+      document.getElementById('goalCurrent').value = state.dailyInfo.monthly_goal_current || 0;
+      document.getElementById('goalTarget').value = state.dailyInfo.monthly_goal_target || 45000;
       renderAssigneeDropdown('open', state.dailyInfo.open_assignee || '');
       renderAssigneeDropdown('close', state.dailyInfo.close_assignee || '');
 
@@ -1872,7 +1897,8 @@
 
       body += `FOLKS WORKING: ${state.dailyInfo.folks_working || 'Not set'}\n`;
       body += `OPENING: $${state.dailyInfo.register_open || 250} (${state.dailyInfo.open_assignee || '--'})\n`;
-      body += `CLOSING: $${state.dailyInfo.register_close || 250} (${state.dailyInfo.close_assignee || '--'})\n\n`;
+      body += `CLOSING: $${state.dailyInfo.register_close || 250} (${state.dailyInfo.close_assignee || '--'})\n`;
+      body += `MONTHLY GOAL: $${state.dailyInfo.monthly_goal_current || 0} / $${state.dailyInfo.monthly_goal_target || 45000}\n\n`;
 
       body += `ANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
       state.announcements.forEach(a => {
