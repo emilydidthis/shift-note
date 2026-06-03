@@ -147,13 +147,6 @@
     .shift-field select { cursor: pointer; min-width: 70px; width: auto; white-space: nowrap; }
     .shift-field select option { color: var(--text); background: var(--white); }
 
-    .goal-field { gap: 4px; }
-    .goal-field input[type="number"] { width: 70px; text-align: center; }
-    .goal-separator {
-      color: rgba(255,255,255,0.4);
-      font-size: 14px;
-    }
-
     .assignee-dropdown {
       position: relative;
       display: inline-flex;
@@ -671,6 +664,81 @@
       font-style: italic;
     }
 
+    /* ===== GOAL CARD ===== */
+    .goal-card {
+      background: var(--primary);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      position: relative;
+      color: var(--white);
+    }
+
+    .goal-display {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .goal-edit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .goal-edit input[type="number"] {
+      width: 80px;
+      padding: 6px 8px;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+      text-align: center;
+    }
+
+    .goal-edit input[type="number"]:focus {
+      outline: none;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .goal-edit input[type="number"]::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+
+    .goal-separator {
+      color: rgba(255,255,255,0.5);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .goal-edit .btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--accent);
+      color: var(--text);
+    }
+
+    .goal-edit-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: all 0.15s;
+    }
+
+    .goal-card:hover .goal-edit-btn { opacity: 0.7; }
+    .goal-edit-btn:hover { opacity: 1 !important; color: var(--white); }
+
     @media (max-width: 900px) {
       header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .shift-info { flex-wrap: wrap; }
@@ -951,13 +1019,6 @@
               <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
             </div>
           </div>
-          <div class="shift-divider"></div>
-          <div class="shift-field goal-field">
-            <label>Goal:</label>
-            <input type="number" id="goalCurrent" value="0" />
-            <span class="goal-separator">/</span>
-            <input type="number" id="goalTarget" value="45000" />
-          </div>
           <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
         <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
@@ -977,7 +1038,18 @@
             <span class="column-count" id="annCount">0</span>
           </div>
         </div>
-        <div class="card-list" id="announcementList"></div>
+        <div class="card-list" id="announcementList">
+          <div class="goal-card" id="goalCard">
+            <div class="goal-display" id="goalDisplay"></div>
+            <div class="goal-edit" id="goalEdit" style="display:none">
+              <input type="number" id="goalCurrent" value="0" />
+              <span class="goal-separator">/</span>
+              <input type="number" id="goalTarget" value="45000" />
+              <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
+            </div>
+            <button class="goal-edit-btn" onclick="toggleGoalEdit()">✎</button>
+          </div>
+        </div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
         <div class="form-container" id="annForm">
           <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
@@ -1549,8 +1621,6 @@
       state.dailyInfo.folks_working = document.getElementById('folksWorking').value.trim();
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
-      state.dailyInfo.monthly_goal_current = document.getElementById('goalCurrent').value;
-      state.dailyInfo.monthly_goal_target = document.getElementById('goalTarget').value;
       saveAll();
       render();
       showToast('Saved');
@@ -1723,17 +1793,30 @@
       document.getElementById('folksWorking').value = state.dailyInfo.folks_working || '';
       document.getElementById('registerOpen').value = state.dailyInfo.register_open || 250;
       document.getElementById('registerClose').value = state.dailyInfo.register_close || 250;
-      document.getElementById('goalCurrent').value = state.dailyInfo.monthly_goal_current || 0;
-      document.getElementById('goalTarget').value = state.dailyInfo.monthly_goal_target || 45000;
       renderAssigneeDropdown('open', state.dailyInfo.open_assignee || '');
       renderAssigneeDropdown('close', state.dailyInfo.close_assignee || '');
 
       const annList = document.getElementById('announcementList');
       document.getElementById('annCount').textContent = state.announcements.length;
-      if (state.announcements.length === 0) {
-        annList.innerHTML = '<div class="empty-state">No announcements yet</div>';
-      } else {
-        annList.innerHTML = state.announcements.map(a => `
+
+      const goalCurrent = state.dailyInfo.monthly_goal_current || 0;
+      const goalTarget = state.dailyInfo.monthly_goal_target || 45000;
+
+      const goalHtml = `
+        <div class="goal-card">
+          <div class="goal-display">$${formatGoal(goalCurrent)} / $${formatGoal(goalTarget)}</div>
+          <div class="goal-edit" id="goalEdit" style="display:none">
+            <input type="number" id="goalCurrent" value="${goalCurrent}" />
+            <span class="goal-separator">/</span>
+            <input type="number" id="goalTarget" value="${goalTarget}" />
+            <button class="btn btn-sm btn-primary" onclick="saveGoal()">Save</button>
+          </div>
+          <button class="goal-edit-btn" onclick="toggleGoalEdit()">✎</button>
+        </div>`;
+
+      const annHtml = state.announcements.length === 0
+        ? '<div class="empty-state">No announcements yet</div>'
+        : state.announcements.map(a => `
           <div class="card" data-id="${a.id}">
             <div class="card-row">
               <div class="avatar">${getInitials(a.author)}</div>
@@ -1751,7 +1834,8 @@
             </div>
           </div>
         `).join('');
-      }
+
+      annList.innerHTML = goalHtml + annHtml;
 
       const filter = document.getElementById('todoFilter').value;
       const filteredTodos = filter === 'all'
@@ -1954,8 +2038,9 @@
           <input type="text" value="${escapeHtml(e)}" onchange="updateEmployee(${i}, this.value)" />
           <button class="modal-delete-btn" onclick="deleteEmployee(${i})">&times;</button>
         </li>
-      `).join('');
-    }
+        `).join('');
+
+      annList.innerHTML = goalHtml + annHtml;
 
     function updateEmployee(index, newName) {
       const trimmed = newName.trim();
@@ -2011,6 +2096,33 @@
 
     let undoState = null;
     let undoTimeout = null;
+
+    function formatGoal(num) {
+      const n = parseInt(num) || 0;
+      if (n >= 1000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k';
+      return n.toString();
+    }
+
+    function toggleGoalEdit() {
+      const editEl = document.getElementById('goalEdit');
+      const displayEl = document.getElementById('goalDisplay');
+      if (editEl.style.display === 'none') {
+        editEl.style.display = 'flex';
+        displayEl.style.display = 'none';
+        editEl.querySelector('input').focus();
+      } else {
+        editEl.style.display = 'none';
+        displayEl.style.display = 'block';
+      }
+    }
+
+    function saveGoal() {
+      state.dailyInfo.monthly_goal_current = document.getElementById('goalCurrent').value;
+      state.dailyInfo.monthly_goal_target = document.getElementById('goalTarget').value;
+      saveAll();
+      render();
+      showToast('Goal updated');
+    }
 
     function showToast(msg, undoFn) {
       const toast = document.getElementById('toast');
