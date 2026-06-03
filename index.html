@@ -498,26 +498,32 @@
 
     .avatar-stack {
       display: flex;
+      flex-direction: column;
       flex-shrink: 0;
       margin-left: auto;
+      gap: 2px;
+      align-items: flex-end;
+    }
+
+    .avatar-row {
+      display: flex;
+      gap: 2px;
     }
 
     .avatar-stack .avatar {
       width: 26px;
       height: 26px;
       font-size: 10px;
-      margin-left: -6px;
       border: 2px solid var(--text-muted);
       cursor: pointer;
       transition: border-color 0.15s, transform 0.15s;
     }
 
-    .avatar-stack .avatar:first-child { margin-left: 0; }
     .avatar-stack .avatar:hover { transform: translateY(-2px); }
 
     .avatar-stack .avatar.done {
-      border-color: #4CAF50;
-      background: #2E7D32;
+      border-color: var(--primary);
+      background: var(--primary);
     }
 
     .avatar-stack .avatar.pending {
@@ -1705,13 +1711,21 @@
             ? state.employees
             : t.assignees;
 
-          const avatarsHtml = displayAssignees.map(a => {
-            const isDone = t.completions && t.completions[a];
-            return `<div class="avatar ${isDone ? 'done' : 'pending'}"
-                 onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')"
-                 title="${getFirstName(a)}: ${isDone ? 'Done' : 'Pending'}">
-              ${getInitials(a)}
-            </div>`;
+          const perRow = displayAssignees.length <= 3 ? displayAssignees.length : Math.ceil(displayAssignees.length / 2);
+          const rows = [];
+          for (let i = 0; i < displayAssignees.length; i += perRow) {
+            rows.push(displayAssignees.slice(i, i + perRow));
+          }
+
+          const avatarsHtml = rows.map(row => {
+            return `<div class="avatar-row">${row.map(a => {
+              const isDone = t.completions && t.completions[a];
+              return `<div class="avatar ${isDone ? 'done' : 'pending'}"
+                   onclick="event.stopPropagation(); toggleCompletion('${t.id}', '${a}')"
+                   title="${getFirstName(a)}: ${isDone ? 'Done' : 'Pending'}">
+                ${getInitials(a)}
+              </div>`;
+            }).join('')}</div>`;
           }).join('');
 
           const progressHtml = t.assignees.length > 1 ? `
