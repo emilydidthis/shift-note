@@ -44,17 +44,11 @@
     /* ===== HEADER ===== */
     header {
       background: var(--primary);
-      padding: 10px 20px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .header-top {
+      padding: 12px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
       gap: 20px;
     }
 
@@ -728,14 +722,10 @@
       margin-left: 1px;
     }
 
-    .column-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 4px 14px;
-    }
-
     .column-gap {
-      height: 16px;
+      height: 20px;
+      border-top: 1px solid var(--border);
+      margin: 0 14px;
     }
 
     .empty-state {
@@ -1004,52 +994,50 @@
 <body>
   <div class="board-container active" id="boardContainer">
     <header>
-      <div class="header-top">
-        <div class="header-left">
-          <div class="date" id="currentDate"></div>
-          <button class="email-btn" onclick="emailSnapshot()">Email</button>
-        </div>
-        <div class="header-right">
-          <div class="goal-card">
-            <span class="goal-label">Goal</span>
-            <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
-            <span class="goal-separator">/</span>
-            <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
-            <span class="goal-unit">k</span>
-          </div>
-          <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </button>
+      <div class="header-left">
+        <div class="date" id="currentDate"></div>
+        <button class="email-btn" onclick="emailSnapshot()">Email</button>
+        <div class="goal-card">
+          <span class="goal-label">Goal</span>
+          <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
+          <span class="goal-separator">/</span>
+          <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
+          <span class="goal-unit">k</span>
         </div>
       </div>
-      <div class="shift-info">
-        <div class="shift-field">
-          <label>Folks:</label>
-          <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
-        </div>
-        <div class="shift-divider"></div>
-        <div class="shift-field">
-          <label>Open:</label>
-          <input type="number" id="registerOpen" value="250" />
-          <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
-            <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
-            <span class="assignee-dropdown-arrow">▾</span>
-            <div class="assignee-dropdown-menu" id="openAssigneeMenu"></div>
+      <div class="header-right">
+        <div class="shift-info">
+          <div class="shift-field">
+            <label>Folks:</label>
+            <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
           </div>
-        </div>
-        <div class="shift-field">
-          <label>Close:</label>
-          <input type="number" id="registerClose" value="250" />
-          <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
-            <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
-            <span class="assignee-dropdown-arrow">▾</span>
-            <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
+          <div class="shift-divider"></div>
+          <div class="shift-field">
+            <label>Open:</label>
+            <input type="number" id="registerOpen" value="250" />
+            <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
+              <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
+              <span class="assignee-dropdown-arrow">▾</span>
+              <div class="assignee-dropdown-menu" id="openAssigneeMenu"></div>
+            </div>
           </div>
+          <div class="shift-field">
+            <label>Close:</label>
+            <input type="number" id="registerClose" value="250" />
+            <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
+              <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
+              <span class="assignee-dropdown-arrow">▾</span>
+              <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
         </div>
-        <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
+        <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
       </div>
     </header>
 
