@@ -418,24 +418,62 @@
     .card.completed { opacity: 0.6; }
     .card.completed .card-text { text-decoration: line-through; }
 
-    .card-edit {
+    .card-menu {
       position: absolute;
-      top: 10px;
-      right: 80px;
+      top: 8px;
+      right: 8px;
+    }
+
+    .card-menu-btn {
       background: none;
       border: none;
       color: var(--text);
       cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 4px;
       opacity: 0;
       transition: opacity 0.15s;
-      padding: 3px 5px;
-      border-radius: 4px;
+      line-height: 1;
     }
 
-    .card:hover .card-edit { opacity: 0.5; }
-    .card-edit:hover { opacity: 1 !important; color: var(--primary); }
+    .card:hover .card-menu-btn { opacity: 0.5; }
+    .card-menu-btn:hover { opacity: 1 !important; background: var(--card-hover); }
+
+    .card-menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--white);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      min-width: 100px;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    .card-menu-dropdown.open { display: block; }
+
+    .card-menu-item {
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .card-menu-item:hover { background: var(--card-bg); }
+    .card-menu-item.danger { color: var(--danger); }
 
     .card-edit-form {
       display: flex;
@@ -501,13 +539,13 @@
       flex-direction: column;
       flex-shrink: 0;
       margin-left: auto;
-      gap: 2px;
+      gap: 1px;
       align-items: flex-end;
     }
 
     .avatar-row {
       display: flex;
-      gap: 2px;
+      gap: 1px;
     }
 
     .avatar-stack .avatar {
@@ -590,26 +628,6 @@
       cursor: pointer;
       accent-color: var(--primary);
     }
-
-    .card-delete {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      font-size: 16px;
-      line-height: 1;
-      opacity: 0;
-      transition: opacity 0.15s;
-      padding: 3px 5px;
-      border-radius: 4px;
-      z-index: 2;
-    }
-
-    .card:hover .card-delete { opacity: 0.5; }
-    .card-delete:hover { opacity: 1 !important; color: var(--danger); }
 
     /* ===== PROGRESS BAR ===== */
     .progress-bar-container { margin-bottom: 8px; }
@@ -1160,6 +1178,19 @@
       }
     });
 
+    function toggleCardMenu(btn) {
+      const dropdown = btn.nextElementSibling;
+      const isOpen = dropdown.classList.contains('open');
+      document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('open'));
+      if (!isOpen) dropdown.classList.add('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.card-menu')) {
+        document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('open'));
+      }
+    });
+
     function updateSyncStatus(type) {
       const syncEl = document.getElementById('syncStatus');
       const syncTextEl = document.getElementById('syncText');
@@ -1685,8 +1716,13 @@
                 <div class="card-meta">${getFirstName(a.author)} - ${formatTime(a.timestamp)}</div>
               </div>
             </div>
-            <button class="card-edit" onclick="editAnnouncement('${a.id}')">✎</button>
-            <button class="card-delete" onclick="deleteAnnouncement('${a.id}')">&times;</button>
+            <div class="card-menu">
+              <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
+              <div class="card-menu-dropdown">
+                <button class="card-menu-item" onclick="event.stopPropagation(); editAnnouncement('${a.id}')">✎ Edit</button>
+                <button class="card-menu-item danger" onclick="event.stopPropagation(); deleteAnnouncement('${a.id}')">✕ Delete</button>
+              </div>
+            </div>
           </div>
         `).join('');
       }
@@ -1750,8 +1786,13 @@
                 </div>
                 <div class="avatar-stack">${avatarsHtml}</div>
               </div>
-              <button class="card-edit" onclick="editTodo('${t.id}')">✎</button>
-              <button class="card-delete" onclick="deleteTodo('${t.id}')">&times;</button>
+              <div class="card-menu">
+                <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
+                <div class="card-menu-dropdown">
+                  <button class="card-menu-item" onclick="event.stopPropagation(); editTodo('${t.id}')">✎ Edit</button>
+                  <button class="card-menu-item danger" onclick="event.stopPropagation(); deleteTodo('${t.id}')">✕ Delete</button>
+                </div>
+              </div>
             </div>
           `;
         }).join('');
@@ -1765,8 +1806,13 @@
         shopList.innerHTML = state.dailyInfo.shopping_list.map(i => `
           <div class="card" data-id="${i.id}">
             <div class="card-text">${escapeHtml(i.content)}</div>
-            <button class="card-edit" onclick="editShoppingItem('${i.id}')">✎</button>
-            <button class="card-delete" onclick="removeShoppingItem('${i.id}')">&times;</button>
+            <div class="card-menu">
+              <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
+              <div class="card-menu-dropdown">
+                <button class="card-menu-item" onclick="event.stopPropagation(); editShoppingItem('${i.id}')">✎ Edit</button>
+                <button class="card-menu-item danger" onclick="event.stopPropagation(); removeShoppingItem('${i.id}')">✕ Delete</button>
+              </div>
+            </div>
           </div>
         `).join('');
       }
@@ -1779,8 +1825,13 @@
         evtList.innerHTML = state.dailyInfo.events.map(i => `
           <div class="card" data-id="${i.id}">
             <div class="card-text">${escapeHtml(i.content)}</div>
-            <button class="card-edit" onclick="editEvent('${i.id}')">✎</button>
-            <button class="card-delete" onclick="removeEvent('${i.id}')">&times;</button>
+            <div class="card-menu">
+              <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
+              <div class="card-menu-dropdown">
+                <button class="card-menu-item" onclick="event.stopPropagation(); editEvent('${i.id}')">✎ Edit</button>
+                <button class="card-menu-item danger" onclick="event.stopPropagation(); removeEvent('${i.id}')">✕ Delete</button>
+              </div>
+            </div>
           </div>
         `).join('');
       }
