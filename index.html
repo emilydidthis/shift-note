@@ -365,7 +365,7 @@
     .card-edit {
       position: absolute;
       top: 10px;
-      right: 30px;
+      right: 80px;
       background: none;
       border: none;
       color: var(--text);
@@ -543,6 +543,7 @@
       transition: opacity 0.15s;
       padding: 3px 5px;
       border-radius: 4px;
+      z-index: 2;
     }
 
     .card:hover .card-delete { opacity: 0.5; }
@@ -606,6 +607,22 @@
     }
 
     .toast.show { transform: translateY(0); opacity: 1; }
+
+    .toast-undo-btn {
+      margin-left: 12px;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: var(--white);
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .toast-undo-btn:hover { background: rgba(255,255,255,0.15); }
 
     /* ===== MODAL ===== */
     .modal-overlay {
@@ -937,7 +954,10 @@
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast">
+    <span id="toastMsg"></span>
+    <button class="toast-undo-btn" id="toastUndoBtn" onclick="undoAction()">Undo</button>
+  </div>
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
@@ -1293,16 +1313,33 @@
     }
 
     function deleteTodo(id) {
+      const todo = state.todos.find(t => t.id === id);
+      if (!todo) return;
+      const idx = state.todos.findIndex(t => t.id === id);
       state.todos = state.todos.filter(t => t.id !== id);
       saveAll();
       render();
       if (taskUser) renderTaskPage();
+      showToast('Task deleted', () => {
+        state.todos.splice(idx, 0, todo);
+        saveAll();
+        render();
+        if (taskUser) renderTaskPage();
+      });
     }
 
     function deleteAnnouncement(id) {
+      const ann = state.announcements.find(a => a.id === id);
+      if (!ann) return;
+      const idx = state.announcements.findIndex(a => a.id === id);
       state.announcements = state.announcements.filter(a => a.id !== id);
       saveAll();
       render();
+      showToast('Announcement deleted', () => {
+        state.announcements.splice(idx, 0, ann);
+        saveAll();
+        render();
+      });
     }
 
     function editAnnouncement(id) {
@@ -1359,9 +1396,17 @@
     }
 
     function removeShoppingItem(id) {
+      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      if (!item) return;
+      const idx = state.dailyInfo.shopping_list.findIndex(i => i.id === id);
       state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
       saveAll();
       render();
+      showToast('Item removed', () => {
+        state.dailyInfo.shopping_list.splice(idx, 0, item);
+        saveAll();
+        render();
+      });
     }
 
     function editShoppingItem(id) {
@@ -1407,9 +1452,17 @@
     }
 
     function removeEvent(id) {
+      const item = state.dailyInfo.events.find(i => i.id === id);
+      if (!item) return;
+      const idx = state.dailyInfo.events.findIndex(i => i.id === id);
       state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
       saveAll();
       render();
+      showToast('Event removed', () => {
+        state.dailyInfo.events.splice(idx, 0, item);
+        saveAll();
+        render();
+      });
     }
 
     function editEvent(id) {
@@ -1749,11 +1802,38 @@
       return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
-    function showToast(msg) {
+    let undoState = null;
+    let undoTimeout = null;
+
+    function showToast(msg, undoFn) {
       const toast = document.getElementById('toast');
-      toast.textContent = msg;
+      const msgEl = document.getElementById('toastMsg');
+      const undoBtn = document.getElementById('toastUndoBtn');
+      msgEl.textContent = msg;
+
+      if (undoFn) {
+        undoState = undoFn;
+        undoBtn.style.display = 'inline-block';
+      } else {
+        undoState = null;
+        undoBtn.style.display = 'none';
+      }
+
+      if (undoTimeout) clearTimeout(undoTimeout);
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+      undoTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        undoState = null;
+      }, 5000);
+    }
+
+    function undoAction() {
+      if (undoState) {
+        undoState();
+        undoState = null;
+        if (undoTimeout) clearTimeout(undoTimeout);
+        document.getElementById('toast').classList.remove('show');
+      }
     }
   </script>
 </body>
