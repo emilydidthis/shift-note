@@ -44,11 +44,17 @@
     /* ===== HEADER ===== */
     header {
       background: var(--primary);
-      padding: 12px 20px;
+      padding: 10px 20px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
       gap: 20px;
     }
 
@@ -663,34 +669,32 @@
     }
 
     .goal-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 6px 10px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 4px 8px;
       display: inline-flex;
       align-items: center;
       gap: 2px;
     }
 
     .goal-label {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--text);
-      opacity: 0.4;
+      color: rgba(255,255,255,0.5);
       font-weight: 600;
     }
 
     .goal-input {
-      width: 32px;
-      padding: 1px 3px;
+      width: 28px;
+      padding: 1px 2px;
       border: none;
       border-radius: 4px;
-      border-bottom: 1.5px solid transparent;
       font-family: var(--font-sans);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       background: transparent;
-      color: var(--text);
+      color: var(--white);
       text-align: center;
       transition: all 0.15s;
       -moz-appearance: textfield;
@@ -703,27 +707,23 @@
     }
 
     .goal-input:hover {
-      background: var(--card-hover);
-      border-bottom-color: var(--text-muted);
+      background: rgba(255,255,255,0.15);
     }
 
     .goal-input:focus {
       outline: none;
-      background: var(--white);
-      border-bottom-color: var(--primary);
+      background: rgba(255,255,255,0.25);
     }
 
     .goal-separator {
-      color: var(--text);
-      opacity: 0.3;
-      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
       font-weight: 600;
     }
 
     .goal-unit {
-      font-size: 12px;
-      color: var(--text);
-      opacity: 0.4;
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
       font-weight: 600;
       margin-left: 1px;
     }
@@ -732,6 +732,10 @@
       height: 1px;
       background: var(--border);
       margin: 4px 14px;
+    }
+
+    .column-gap {
+      height: 16px;
     }
 
     .empty-state {
@@ -1000,55 +1004,54 @@
 <body>
   <div class="board-container active" id="boardContainer">
     <header>
-      <div class="header-left">
-        <div class="date" id="currentDate"></div>
-        <button class="email-btn" onclick="emailSnapshot()">Email</button>
-      </div>
-      <div class="header-right">
-        <div class="shift-info">
-          <div class="shift-field">
-            <label>Folks:</label>
-            <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
-          </div>
-          <div class="shift-divider"></div>
-          <div class="shift-field">
-            <label>Open:</label>
-            <input type="number" id="registerOpen" value="250" />
-            <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
-              <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
-              <span class="assignee-dropdown-arrow">▾</span>
-              <div class="assignee-dropdown-menu" id="openAssigneeMenu"></div>
-            </div>
-          </div>
-          <div class="shift-field">
-            <label>Close:</label>
-            <input type="number" id="registerClose" value="250" />
-            <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
-              <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
-              <span class="assignee-dropdown-arrow">▾</span>
-              <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
+      <div class="header-top">
+        <div class="header-left">
+          <div class="date" id="currentDate"></div>
+          <button class="email-btn" onclick="emailSnapshot()">Email</button>
         </div>
-        <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </button>
+        <div class="header-right">
+          <div class="goal-card">
+            <span class="goal-label">Goal</span>
+            <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
+            <span class="goal-separator">/</span>
+            <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
+            <span class="goal-unit">k</span>
+          </div>
+          <button class="settings-btn" onclick="openSettings()" title="Manage Employees">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="shift-info">
+        <div class="shift-field">
+          <label>Folks:</label>
+          <input type="text" id="folksWorking" placeholder="e.g., BBAE" />
+        </div>
+        <div class="shift-divider"></div>
+        <div class="shift-field">
+          <label>Open:</label>
+          <input type="number" id="registerOpen" value="250" />
+          <div class="assignee-dropdown" id="openAssigneeDropdown" onclick="toggleAssigneeDropdown('open')">
+            <span class="assignee-dropdown-display" id="openAssigneeDisplay">--</span>
+            <span class="assignee-dropdown-arrow">▾</span>
+            <div class="assignee-dropdown-menu" id="openAssigneeMenu"></div>
+          </div>
+        </div>
+        <div class="shift-field">
+          <label>Close:</label>
+          <input type="number" id="registerClose" value="250" />
+          <div class="assignee-dropdown" id="closeAssigneeDropdown" onclick="toggleAssigneeDropdown('close')">
+            <span class="assignee-dropdown-display" id="closeAssigneeDisplay">--</span>
+            <span class="assignee-dropdown-arrow">▾</span>
+            <div class="assignee-dropdown-menu" id="closeAssigneeMenu"></div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="updateRegisters()">Save</button>
       </div>
     </header>
-
-    <div class="goal-bar" id="goalBar">
-      <div class="goal-card">
-        <span class="goal-label">Goal</span>
-        <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
-        <span class="goal-separator">/</span>
-        <input class="goal-input" type="number" id="goalTarget" value="45" onchange="saveGoalValue('target', this.value)" />
-        <span class="goal-unit">k</span>
-      </div>
-    </div>
 
     <div class="board">
       <div class="column wide">
@@ -1087,7 +1090,7 @@
         </div>
       </div>
 
-      <div class="column">
+      <div class="column narrow">
         <div class="column-header">
           <div class="column-header-left">
             Events
@@ -1100,7 +1103,7 @@
           <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
         </div>
-        <div class="column-divider"></div>
+        <div class="column-gap"></div>
         <div class="column-header">
           <div class="column-header-left">
             Shopping
