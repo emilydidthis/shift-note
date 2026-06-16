@@ -64,10 +64,12 @@ function doGet(e) {
     if (data[i][0] === 'todos') todoJson = data[i][1];
     if (data[i][0] === 'dailyInfo') dailyJson = data[i][1];
     if (data[i][0] === 'employees') empJson = data[i][1];
+    if (data[i][0] === 'employeesUpdatedAt') empUpdatedAt = data[i][1];
   }
   
   const result = {
-    employees: empJson ? JSON.parse(empJson) : ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'],
+    employees: empJson ? JSON.parse(empJson) : ['Ash E', 'Brett B', 'Dom W', 'Emma F', 'Emily Z', 'Lena B'],
+    employeesUpdatedAt: empUpdatedAt ? parseInt(empUpdatedAt) : 0,
     announcements: annJson ? JSON.parse(annJson) : [],
     todos: todoJson ? JSON.parse(todoJson) : [],
     dailyInfo: dailyJson ? JSON.parse(dailyJson) : {
@@ -94,8 +96,8 @@ function doPost(e) {
   
   if (data.action === 'saveAll') {
     if (data.employees) {
-      data.employees._updatedAt = new Date().getTime();
       saveData('employees', data.employees);
+      saveData('employeesUpdatedAt', String(data.employeesUpdatedAt || 0));
     }
     saveData('announcements', data.announcements);
     saveData('todos', data.todos);

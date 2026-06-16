@@ -1145,7 +1145,7 @@
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPuuK6cli1XFRYaJBDBJeRSl1u73vpNa7ma2gBkFdeGrCOgmbFuXKGHbmLnrO7WKBP/exec';
-    const DEFAULT_EMPLOYEES = ['Ash', 'Brett', 'Dom', 'Emma', 'Emily', 'Lena'];
+    const DEFAULT_EMPLOYEES = ['Ash E', 'Brett B', 'Dom W', 'Emma F', 'Emily Z', 'Lena B'];
 
     let employeesUpdatedAt = 0;
 
@@ -1393,11 +1393,9 @@
       });
       const cloudDaily = data.dailyInfo || {};
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
-
-      // Merge employees: use whichever version is newer
-      const cloudEmpTimestamp = cloudEmployees._updatedAt || 0;
-      if (cloudEmpTimestamp > employeesUpdatedAt) {
-        employeesUpdatedAt = cloudEmpTimestamp;
+      const cloudEmpTimestamp = data.employeesUpdatedAt || 0;
+      if (cloudEmpTimestamp > employeesUpdatedAt || employeesUpdatedAt === 0) {
+        employeesUpdatedAt = cloudEmpTimestamp || 1;
         state.employees = cloudEmployees;
       }
 
@@ -1444,6 +1442,7 @@
           const payload = JSON.stringify({
             action: 'saveAll',
             employees: state.employees,
+            employeesUpdatedAt: employeesUpdatedAt,
             announcements: state.announcements,
             todos: state.todos,
             dailyInfo: state.dailyInfo
