@@ -867,6 +867,18 @@
       transition: opacity 0.15s;
     }
 
+    .modal-copy-link {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 6px;
+      opacity: 0.4;
+      transition: opacity 0.15s;
+    }
+
+    .modal-copy-link:hover { opacity: 1; }
+
     .modal-delete-btn:hover { opacity: 1; }
 
     .modal-add-btn {
@@ -2099,6 +2111,7 @@
       list.innerHTML = state.employees.map((e, i) => `
         <li>
           <input type="text" value="${escapeHtml(e)}" onchange="updateEmployee(${i}, this.value)" />
+          <button class="modal-copy-link" onclick="copyTaskLink('${getFirstName(e)}')" title="Copy task link">🔗</button>
           <button class="modal-delete-btn" onclick="deleteEmployee(${i})">&times;</button>
         </li>
         `).join('');
@@ -2125,6 +2138,13 @@
         state.employees.push(name.trim());
         renderEmployeeList();
       }
+    }
+
+    function copyTaskLink(name) {
+      const url = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(name);
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied for ' + name);
+      });
     }
 
     function deleteEmployee(index) {
