@@ -1365,7 +1365,7 @@
       }
 
       if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
-        fetch(APPS_SCRIPT_URL)
+        fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store' })
           .then(res => res.json())
           .then(handleCloudData)
           .catch(() => {
@@ -1374,7 +1374,7 @@
           });
       } else {
         const script = document.createElement('script');
-        script.src = APPS_SCRIPT_URL + '?callback=handleCloudData';
+        script.src = APPS_SCRIPT_URL + '?callback=handleCloudData&t=' + Date.now();
         script.onerror = function() {
           if (!hasLocal) { updateAllDropdowns(); render(); }
           updateSyncStatus('error');
