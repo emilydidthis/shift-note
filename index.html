@@ -1394,8 +1394,8 @@
       const cloudDaily = data.dailyInfo || {};
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
       const cloudEmpTimestamp = data.employeesUpdatedAt || 0;
-      if (cloudEmpTimestamp > employeesUpdatedAt || employeesUpdatedAt === 0) {
-        employeesUpdatedAt = cloudEmpTimestamp || 1;
+      if (cloudEmpTimestamp >= employeesUpdatedAt || employeesUpdatedAt === 0) {
+        employeesUpdatedAt = cloudEmpTimestamp > 2000000000000 ? Date.now() : (cloudEmpTimestamp || 1);
         state.employees = cloudEmployees;
       }
 
