@@ -604,6 +604,18 @@
       margin-top: 5px;
     }
 
+    .card-due-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .card-due-date.overdue {
+      color: var(--danger);
+    }
+
     .card-tags {
       display: flex;
       flex-wrap: wrap;
@@ -1078,6 +1090,7 @@
         <button class="add-btn" onclick="toggleForm('todo')">+</button>
         <div class="form-container" id="todoForm">
           <textarea id="todoText" rows="2" placeholder="Add a task..."></textarea>
+          <input type="date" id="todoDueDate" />
           <div class="assignee-selector" id="assigneeSelector"></div>
           <select id="todoAuthor"></select>
           <button class="btn btn-primary btn-sm" onclick="addTodo()">Add</button>
@@ -1535,17 +1548,21 @@
       const completions = {};
       state.selectedAssignees.forEach(a => completions[a] = false);
 
+      const dueDate = document.getElementById('todoDueDate').value || null;
+
       state.todos.unshift({
         id: Date.now().toString(),
         content: text,
         assignees: [...state.selectedAssignees],
         completions,
         author,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        dueDate
       });
 
       saveAll();
       document.getElementById('todoText').value = '';
+      document.getElementById('todoDueDate').value = '';
       state.selectedAssignees = [];
       document.querySelectorAll('.assignee-chip').forEach(c => c.classList.remove('selected'));
       document.getElementById('todoForm').classList.remove('active');
@@ -1778,6 +1795,7 @@
       card.innerHTML = `
         <div class="card-edit-form">
           <textarea rows="2">${escapeHtml(item.content)}</textarea>
+          <input type="date" value="${item.dueDate || ''}" />
           <div class="assignee-selector">${chipsHtml}</div>
           <div class="card-edit-actions">
             <button class="btn btn-edit-cancel" onclick="render()">Cancel</button>
@@ -1791,15 +1809,18 @@
     function saveTodo(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const textarea = card.querySelector('textarea');
+      const dateInput = card.querySelector('input[type="date"]');
       const selectedChips = card.querySelectorAll('.assignee-chip.selected');
       const item = state.todos.find(t => t.id === id);
       if (!item) return;
 
       const newText = textarea.value.trim();
+      const newDueDate = dateInput.value || null;
       const newAssignees = Array.from(selectedChips).map(c => c.dataset.value);
       if (!newText || newAssignees.length === 0) return;
 
       item.content = newText;
+      item.dueDate = newDueDate;
 
       const oldAssignees = item.assignees;
       item.assignees = newAssignees;
@@ -1858,9 +1879,17 @@
 
       const filter = document.getElementById('todoFilter').value;
       const filterResolved = filter !== 'all' ? resolveEmployee(filter) : '';
-      const filteredTodos = filter === 'all'
+      let filteredTodos = filter === 'all'
         ? state.todos
         : state.todos.filter(t => t.assignees.includes(filterResolved) || t.assignees.includes('All'));
+
+      // Sort by due date: soonest first, no due date last
+      filteredTodos.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
 
       const todoList = document.getElementById('todoList');
       document.getElementById('todoCount').textContent = filteredTodos.length;
@@ -1908,6 +1937,8 @@
             </div>
           ` : '';
 
+           const dueDateHtml = t.dueDate ? `<div class="card-due-date ${isOverdue(t.dueDate) && !complete ? 'overdue' : ''}">Due ${formatDueDate(t.dueDate)}</div>` : '';
+
           return `
             <div class="card ${complete ? 'completed' : ''}" data-id="${t.id}">
               <div class="todo-card-row">
@@ -1915,6 +1946,7 @@
                 <div class="todo-card-body">
                   <div class="card-text">${escapeHtml(t.content)}</div>
                   ${progressHtml}
+                  ${dueDateHtml}
                   <div class="card-meta">Added by ${getFirstName(t.author)} - ${formatTime(t.timestamp)}</div>
                 </div>
                 <div class="avatar-stack">${avatarsHtml}</div>
@@ -2122,6 +2154,26 @@
     function formatTime(iso) {
       const d = new Date(iso);
       return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function formatDueDate(dateStr) {
+      const due = new Date(dateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      if (due.getTime() === today.getTime()) return 'today';
+      if (due.getTime() === tomorrow.getTime()) return 'tomorrow';
+
+      return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function isOverdue(dateStr) {
+      const due = new Date(dateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return due.getTime() < today.getTime();
     }
 
     let undoState = null;
