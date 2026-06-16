@@ -999,6 +999,18 @@
       margin-top: 4px;
     }
 
+    .task-page-due-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .task-page-due-date.overdue {
+      color: var(--danger);
+    }
+
     .task-page-empty {
       text-align: center;
       padding: 40px 20px;
@@ -2016,7 +2028,15 @@
 
     function renderTaskPage() {
       const list = document.getElementById('taskPageList');
-      const userTodos = state.todos.filter(t => t.assignees.includes(taskUser) || t.assignees.includes('All'));
+      let userTodos = state.todos.filter(t => t.assignees.includes(taskUser) || t.assignees.includes('All'));
+
+      // Sort by due date: soonest first, no due date last
+      userTodos.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
 
       if (userTodos.length === 0) {
         list.innerHTML = '<div class="task-page-empty">No tasks assigned to you</div>';
@@ -2028,12 +2048,14 @@
         const done = getCompletionCount(t);
         const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
         const userDone = t.completions && t.completions[taskUser];
+        const dueDateHtml = t.dueDate ? `<div class="task-page-due-date ${isOverdue(t.dueDate) && !complete ? 'overdue' : ''}">Due ${formatDueDate(t.dueDate)}</div>` : '';
 
         return `
           <div class="task-page-item ${complete ? 'completed' : ''}">
             <input type="checkbox" ${userDone ? 'checked' : ''} onchange="toggleCompletion('${t.id}', '${taskUser}')" />
             <div>
               <div class="task-page-text">${escapeHtml(t.content)}</div>
+              ${dueDateHtml}
               <div class="task-page-meta">${done} of ${total} people completed</div>
             </div>
           </div>
