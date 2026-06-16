@@ -1393,10 +1393,10 @@
       });
       const cloudDaily = data.dailyInfo || {};
       const cloudEmployees = data.employees || [...DEFAULT_EMPLOYEES];
-      const cloudEmpTimestamp = data.employeesUpdatedAt || 0;
-      if (cloudEmpTimestamp >= employeesUpdatedAt || employeesUpdatedAt === 0) {
-        employeesUpdatedAt = cloudEmpTimestamp > 2000000000000 ? Date.now() : (cloudEmpTimestamp || 1);
+      // Always prefer cloud employees since the sheet is the source of truth
+      if (data.employees) {
         state.employees = cloudEmployees;
+        employeesUpdatedAt = data.employeesUpdatedAt || Date.now();
       }
 
       const annMap = {};
