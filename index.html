@@ -545,13 +545,13 @@
     }
 
     .card-link {
-      color: var(--primary);
+      color: var(--primary) !important;
       text-decoration: underline;
       word-break: break-all;
     }
 
     .card-link:hover {
-      color: var(--primary-dark);
+      color: var(--primary-dark) !important;
     }
 
     .card.card-purchased { opacity: 0.5; }
@@ -798,6 +798,7 @@
       color: var(--text);
       opacity: 0.5;
       margin-top: 3px;
+      text-align: center;
     }
 
     /* ===== GOAL BAR ===== */
@@ -2210,11 +2211,10 @@
                 ${filterCheckboxHtml}
                 <div class="todo-card-body">
                   <div class="card-text">${parseMarkdown(t.content)}</div>
-                  ${progressText}
                   ${dueDateHtml}
                   <div class="card-meta">${taskRecent ? '<span class="new-tag">NEW</span>' : ''}Added by ${getFirstName(t.author)} - ${formatTime(t.timestamp)}</div>
                 </div>
-                <div class="avatar-stack">${avatarsHtml}</div>
+                <div class="avatar-stack">${avatarsHtml}${progressText}</div>
               </div>
               <div class="card-menu">
                 <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
