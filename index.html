@@ -1171,6 +1171,12 @@
             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
           </svg>
         </button>
+        <button class="header-icon-btn" onclick="gmailSnapshot()" title="Send via Gmail">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </button>
         <button class="header-icon-btn" onclick="emailSnapshot()" title="Email Snapshot">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m22 2-7 20-4-9-9-4z"/>
@@ -2441,6 +2447,14 @@
       navigator.clipboard.writeText(text).then(() => {
         showToast('Snapshot copied to clipboard');
       });
+    }
+
+    function gmailSnapshot() {
+      const text = generateSnapshotText();
+      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const subject = encodeURIComponent(`Shift Note - ${date}`);
+      const body = encodeURIComponent(text);
+      window.open(`https://mail.google.com/mail/?view=cm&su=${subject}&body=${body}`, '_blank');
     }
 
     function openSettings() {
