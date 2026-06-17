@@ -435,6 +435,9 @@
 
     .card.card-new:hover { background: rgba(212, 181, 122, 0.18); }
 
+    .card.card-purchased { opacity: 0.5; }
+    .card.card-purchased .card-text { text-decoration: line-through; }
+
     .card-menu-btn {
       background: none;
       border: none;
@@ -1153,6 +1156,10 @@
             Shopping
             <span class="column-count" id="shopCount">0</span>
           </div>
+          <select class="todo-filter" id="shopFilter" onchange="render()">
+            <option value="all">All</option>
+            <option value="purchased">Purchased</option>
+          </select>
         </div>
         <div class="card-list" id="shoppingList"></div>
         <button class="add-btn" onclick="toggleForm('shop')">+</button>
@@ -1706,10 +1713,18 @@
     function addShoppingItem() {
       const text = document.getElementById('shoppingItem').value.trim();
       if (!text) return;
-      state.dailyInfo.shopping_list.push({ id: Date.now().toString(), content: text });
+      state.dailyInfo.shopping_list.push({ id: Date.now().toString(), content: text, purchased: false });
       saveAll();
       document.getElementById('shoppingItem').value = '';
       document.getElementById('shopForm').classList.remove('active');
+      render();
+    }
+
+    function toggleShoppingItem(id) {
+      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      if (!item) return;
+      item.purchased = !item.purchased;
+      saveAll();
       render();
     }
 
@@ -2008,14 +2023,24 @@
         }).join('');
       }
 
+      const shopFilter = document.getElementById('shopFilter').value;
+      const filteredShop = shopFilter === 'purchased'
+        ? state.dailyInfo.shopping_list.filter(i => i.purchased)
+        : state.dailyInfo.shopping_list.filter(i => !i.purchased);
+
       const shopList = document.getElementById('shoppingList');
-      document.getElementById('shopCount').textContent = state.dailyInfo.shopping_list.length;
-      if (state.dailyInfo.shopping_list.length === 0) {
-        shopList.innerHTML = '<div class="empty-state">Shopping list is empty</div>';
+      document.getElementById('shopCount').textContent = state.dailyInfo.shopping_list.filter(i => !i.purchased).length;
+      if (filteredShop.length === 0) {
+        shopList.innerHTML = '<div class="empty-state">' + (shopFilter === 'purchased' ? 'No purchased items' : 'Shopping list is empty') + '</div>';
       } else {
-        shopList.innerHTML = state.dailyInfo.shopping_list.map(i => `
-          <div class="card" data-id="${i.id}">
-            <div class="card-text">${escapeHtml(i.content)}</div>
+        shopList.innerHTML = filteredShop.map(i => `
+          <div class="card ${i.purchased ? 'card-purchased' : ''}" data-id="${i.id}">
+            <div class="todo-card-row">
+              <input type="checkbox" class="todo-checkbox" ${i.purchased ? 'checked' : ''} onclick="event.stopPropagation(); toggleShoppingItem('${i.id}')" />
+              <div class="todo-card-body">
+                <div class="card-text">${escapeHtml(i.content)}</div>
+              </div>
+            </div>
             <div class="card-menu">
               <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
               <div class="card-menu-dropdown">
