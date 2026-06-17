@@ -1167,6 +1167,23 @@
           <input type="text" id="shoppingItem" placeholder="Add item..." />
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
         </div>
+        <div class="column-gap"></div>
+        <div class="column-header">
+          <div class="column-header-left">
+            Faire
+            <span class="column-count" id="faireCount">0</span>
+          </div>
+          <select class="todo-filter" id="faireFilter" onchange="render()">
+            <option value="all">All</option>
+            <option value="purchased">Purchased</option>
+          </select>
+        </div>
+        <div class="card-list" id="faireList"></div>
+        <button class="add-btn" onclick="toggleForm('faire')">+</button>
+        <div class="form-container" id="faireForm">
+          <input type="text" id="faireItem" placeholder="Add Faire item..." />
+          <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addFaireItem()">Add</button>
+        </div>
       </div>
     </div>
 
@@ -1219,6 +1236,7 @@
         monthly_goal_current: 0,
         monthly_goal_target: 45000,
         shopping_list: [],
+        faire_list: [],
         events: []
       },
       selectedAssignees: []
@@ -1774,6 +1792,70 @@
       showToast('Updated');
     }
 
+    function addFaireItem() {
+      const text = document.getElementById('faireItem').value.trim();
+      if (!text) return;
+      state.dailyInfo.faire_list.push({ id: Date.now().toString(), content: text, purchased: false });
+      saveAll();
+      document.getElementById('faireItem').value = '';
+      document.getElementById('faireForm').classList.remove('active');
+      render();
+    }
+
+    function toggleFaireItem(id) {
+      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      if (!item) return;
+      item.purchased = !item.purchased;
+      saveAll();
+      render();
+    }
+
+    function removeFaireItem(id) {
+      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      if (!item) return;
+      const idx = state.dailyInfo.faire_list.findIndex(i => i.id === id);
+      state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => i.id !== id);
+      saveAll();
+      render();
+      showToast('Item removed', () => {
+        state.dailyInfo.faire_list.splice(idx, 0, item);
+        saveAll();
+        render();
+      });
+    }
+
+    function editFaireItem(id) {
+      const card = document.querySelector(`.card[data-id="${id}"]`);
+      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      if (!card || !item) return;
+
+      card.innerHTML = `
+        <div class="card-edit-form">
+          <input type="text" value="${escapeHtml(item.content)}" />
+          <div class="card-edit-actions">
+            <button class="btn btn-edit-cancel" onclick="render()">Cancel</button>
+            <button class="btn btn-edit-save" onclick="saveFaireItem('${id}')">Save</button>
+          </div>
+        </div>
+      `;
+      card.querySelector('input').focus();
+    }
+
+    function saveFaireItem(id) {
+      const card = document.querySelector(`.card[data-id="${id}"]`);
+      const input = card.querySelector('input');
+      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      if (!item) return;
+
+      const newText = input.value.trim();
+      if (!newText) return;
+
+      item.content = newText;
+      saveAll();
+      render();
+      showToast('Updated');
+    }
+
     function addEvent() {
       const text = document.getElementById('eventText').value.trim();
       if (!text) return;
@@ -2052,6 +2134,35 @@
         `).join('');
       }
 
+      const faireFilter = document.getElementById('faireFilter').value;
+      const filteredFaire = faireFilter === 'purchased'
+        ? state.dailyInfo.faire_list.filter(i => i.purchased)
+        : state.dailyInfo.faire_list.filter(i => !i.purchased);
+
+      const faireList = document.getElementById('faireList');
+      document.getElementById('faireCount').textContent = state.dailyInfo.faire_list.filter(i => !i.purchased).length;
+      if (filteredFaire.length === 0) {
+        faireList.innerHTML = '<div class="empty-state">' + (faireFilter === 'purchased' ? 'No purchased items' : 'Faire list is empty') + '</div>';
+      } else {
+        faireList.innerHTML = filteredFaire.map(i => `
+          <div class="card ${i.purchased ? 'card-purchased' : ''}" data-id="${i.id}">
+            <div class="todo-card-row">
+              <input type="checkbox" class="todo-checkbox" ${i.purchased ? 'checked' : ''} onclick="event.stopPropagation(); toggleFaireItem('${i.id}')" />
+              <div class="todo-card-body">
+                <div class="card-text">${escapeHtml(i.content)}</div>
+              </div>
+            </div>
+            <div class="card-menu">
+              <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
+              <div class="card-menu-dropdown">
+                <button class="card-menu-item" onclick="event.stopPropagation(); editFaireItem('${i.id}')">✎ Edit</button>
+                <button class="card-menu-item danger" onclick="event.stopPropagation(); removeFaireItem('${i.id}')">✕ Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
       const evtList = document.getElementById('eventList');
       document.getElementById('eventCount').textContent = state.dailyInfo.events.length;
       if (state.dailyInfo.events.length === 0) {
@@ -2139,9 +2250,15 @@
 
       body += `\nSHOPPING LIST:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.shopping_list.forEach(i => {
-        body += `- ${i.content}\n`;
+        body += `- ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
       });
       if (state.dailyInfo.shopping_list.length === 0) body += '(empty)\n';
+
+      body += `\nFAIRE:\n${'-'.repeat(30)}\n`;
+      state.dailyInfo.faire_list.forEach(i => {
+        body += `- ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
+      });
+      if (state.dailyInfo.faire_list.length === 0) body += '(empty)\n';
 
       body += `\nUPCOMING EVENTS:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.events.forEach(i => {
