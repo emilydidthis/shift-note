@@ -545,6 +545,16 @@
       vertical-align: middle;
     }
 
+    .card-link {
+      color: var(--primary);
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    .card-link:hover {
+      color: var(--primary-dark);
+    }
+
     .card.card-purchased { opacity: 0.5; }
     .card.card-purchased .card-text { text-decoration: line-through; }
 
@@ -2122,7 +2132,7 @@
             <div class="card-row">
               <div class="avatar">${getInitials(a.author)}</div>
               <div class="card-body">
-                <div class="card-text">${escapeHtml(a.content)}</div>
+                <div class="card-text">${linkify(a.content)}</div>
                 <div class="card-meta">${recent ? '<span class="new-tag">NEW</span>' : ''}${getFirstName(a.author)} - ${formatTime(a.timestamp)}</div>
               </div>
             </div>
@@ -2207,7 +2217,7 @@
               <div class="todo-card-row">
                 ${filterCheckboxHtml}
                 <div class="todo-card-body">
-                  <div class="card-text">${escapeHtml(t.content)}</div>
+                  <div class="card-text">${linkify(t.content)}</div>
                   ${progressHtml}
                   ${dueDateHtml}
                   <div class="card-meta">${taskRecent ? '<span class="new-tag">NEW</span>' : ''}Added by ${getFirstName(t.author)} - ${formatTime(t.timestamp)}</div>
@@ -2334,7 +2344,7 @@
           <div class="task-page-item ${complete ? 'completed' : ''}">
             <input type="checkbox" ${userDone ? 'checked' : ''} onchange="toggleCompletion('${t.id}', '${taskUser}')" />
             <div>
-              <div class="task-page-text">${escapeHtml(t.content)}</div>
+              <div class="task-page-text">${linkify(t.content)}</div>
               ${dueDateHtml}
               <div class="task-page-meta">${done} of ${total} people completed</div>
             </div>
@@ -2524,6 +2534,11 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return escapeHtml(text).replace(urlRegex, '<a href="$1" target="_blank" rel="noopener" class="card-link">$1</a>');
     }
 
     function formatTime(iso) {
