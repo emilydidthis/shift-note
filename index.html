@@ -1177,12 +1177,6 @@
             <polyline points="22,6 12,13 2,6"/>
           </svg>
         </button>
-        <button class="header-icon-btn" onclick="emailSnapshot()" title="Email Snapshot">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m22 2-7 20-4-9-9-4z"/>
-            <path d="m22 2-11 11"/>
-          </svg>
-        </button>
         <div class="goal-card">
           <span class="goal-label">Goal</span>
           <input class="goal-input" type="number" id="goalCurrent" value="0" onchange="saveGoalValue('current', this.value)" />
@@ -1770,6 +1764,11 @@
       const todo = state.todos.find(t => t.id === id);
       if (!todo || !todo.completions) return;
       todo.completions[assignee] = !todo.completions[assignee];
+      if (isTodoComplete(todo) && !todo.completedAt) {
+        todo.completedAt = Date.now();
+      } else if (!isTodoComplete(todo)) {
+        todo.completedAt = null;
+      }
       saveAll();
       render();
       if (taskUser) renderTaskPage();
@@ -1782,6 +1781,11 @@
       todo.assignees.forEach(a => {
         todo.completions[a] = !allDone;
       });
+      if (!allDone && !todo.completedAt) {
+        todo.completedAt = Date.now();
+      } else if (allDone) {
+        todo.completedAt = null;
+      }
       saveAll();
       render();
       if (taskUser) renderTaskPage();
@@ -2172,14 +2176,14 @@
       if (filter === 'completed') {
         // Show only completed tasks older than 7 days
         const weekAgo = Date.now() - 7 * 86400000;
-        filteredTodos = state.todos.filter(t => isTodoComplete(t) && (t.updatedAt || 0) < weekAgo);
+        filteredTodos = state.todos.filter(t => isTodoComplete(t) && (t.completedAt || 0) < weekAgo);
       } else {
         filteredTodos = filter === 'all'
           ? state.todos
           : state.todos.filter(t => t.assignees.includes(filterResolved) || t.assignees.includes('All'));
         // In main view: incomplete first (by due date), then recently completed (past 7 days) at bottom
         const weekAgo = Date.now() - 7 * 86400000;
-        filteredTodos = filteredTodos.filter(t => !isTodoComplete(t) || (t.updatedAt || 0) >= weekAgo);
+        filteredTodos = filteredTodos.filter(t => !isTodoComplete(t) || (t.completedAt || 0) >= weekAgo);
       }
 
       // Sort: incomplete by due date first, then completed at bottom
