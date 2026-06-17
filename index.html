@@ -1251,6 +1251,7 @@
           </div>
           <select class="todo-filter" id="todoFilter" onchange="render()">
             <option value="all">All</option>
+            <option value="completed">Completed</option>
           </select>
         </div>
         <div class="card-list" id="todoList"></div>
@@ -2159,13 +2160,28 @@
       annList.innerHTML = annHtml;
 
       const filter = document.getElementById('todoFilter').value;
-      const filterResolved = filter !== 'all' ? resolveEmployee(filter) : '';
-      let filteredTodos = filter === 'all'
-        ? state.todos
-        : state.todos.filter(t => t.assignees.includes(filterResolved) || t.assignees.includes('All'));
+      const filterResolved = filter !== 'all' && filter !== 'completed' ? resolveEmployee(filter) : '';
+      let filteredTodos;
 
-      // Sort by due date: soonest first, no due date last
+      if (filter === 'completed') {
+        // Show only completed tasks older than 7 days
+        const weekAgo = Date.now() - 7 * 86400000;
+        filteredTodos = state.todos.filter(t => isTodoComplete(t) && (t.updatedAt || 0) < weekAgo);
+      } else {
+        filteredTodos = filter === 'all'
+          ? state.todos
+          : state.todos.filter(t => t.assignees.includes(filterResolved) || t.assignees.includes('All'));
+        // In main view: incomplete first (by due date), then recently completed (past 7 days) at bottom
+        const weekAgo = Date.now() - 7 * 86400000;
+        filteredTodos = filteredTodos.filter(t => !isTodoComplete(t) || (t.updatedAt || 0) >= weekAgo);
+      }
+
+      // Sort: incomplete by due date first, then completed at bottom
       filteredTodos.sort((a, b) => {
+        const aComplete = isTodoComplete(a);
+        const bComplete = isTodoComplete(b);
+        if (aComplete !== bComplete) return aComplete ? 1 : -1;
+        // Both same completion state - sort by due date
         if (!a.dueDate && !b.dueDate) return 0;
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
@@ -2175,7 +2191,8 @@
       const todoList = document.getElementById('todoList');
       document.getElementById('todoCount').textContent = filteredTodos.length;
       if (filteredTodos.length === 0) {
-        todoList.innerHTML = '<div class="empty-state">No tasks' + (filter !== 'all' ? ` for ${filter}` : ' yet') + '</div>';
+        const emptyMsg = filter === 'completed' ? 'No old completed tasks' : 'No tasks' + (filter !== 'all' ? ` for ${filter}` : ' yet');
+        todoList.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
       } else {
         todoList.innerHTML = filteredTodos.map(t => {
           const complete = isTodoComplete(t);
