@@ -428,6 +428,26 @@
     .card.completed { opacity: 0.6; }
     .card.completed .card-text { text-decoration: line-through; }
 
+    .card.card-new {
+      background: rgba(212, 181, 122, 0.12);
+      border-left: 3px solid var(--accent);
+    }
+
+    .card.card-new:hover { background: rgba(212, 181, 122, 0.18); }
+
+    .new-badge {
+      position: absolute;
+      top: 8px;
+      right: 28px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: var(--accent);
+      color: var(--text);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
     .card-menu-btn {
       background: none;
       border: none;
@@ -1898,10 +1918,15 @@
       const annList = document.getElementById('announcementList');
       document.getElementById('annCount').textContent = filteredAnns.length;
 
+      const isNew = (a) => (Date.now() - new Date(a.timestamp).getTime()) < 3 * 86400000;
+
       const annHtml = filteredAnns.length === 0
         ? '<div class="empty-state">' + (annFilter === 'all' ? 'No announcements yet' : 'No announcements in this period') + '</div>'
-        : filteredAnns.map(a => `
-          <div class="card" data-id="${a.id}">
+        : filteredAnns.map(a => {
+          const recent = isNew(a);
+          return `
+          <div class="card ${recent ? 'card-new' : ''}" data-id="${a.id}">
+            ${recent ? '<span class="new-badge">NEW</span>' : ''}
             <div class="card-row">
               <div class="avatar">${getInitials(a.author)}</div>
               <div class="card-body">
@@ -1917,7 +1942,8 @@
               </div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
 
       annList.innerHTML = annHtml;
 
