@@ -1817,14 +1817,17 @@
 
       card.innerHTML = `
         <div class="card-edit-form">
-          <textarea rows="3">${escapeHtml(item.content)}</textarea>
+          <textarea rows="1">${escapeHtml(item.content)}</textarea>
           <div class="card-edit-actions">
             <button class="btn btn-edit-cancel" onclick="render()">Cancel</button>
             <button class="btn btn-edit-save" onclick="saveAnnouncement('${id}')">Save</button>
           </div>
         </div>
       `;
-      card.querySelector('textarea').focus();
+      const textarea = card.querySelector('textarea');
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.focus();
     }
 
     function saveAnnouncement(id) {
@@ -2055,7 +2058,7 @@
 
       card.innerHTML = `
         <div class="card-edit-form">
-          <textarea rows="2">${escapeHtml(item.content)}</textarea>
+          <textarea rows="1">${escapeHtml(item.content)}</textarea>
           <input type="date" value="${item.dueDate || ''}" />
           <div class="assignee-selector">${chipsHtml}</div>
           <div class="card-edit-actions">
@@ -2064,7 +2067,10 @@
           </div>
         </div>
       `;
-      card.querySelector('textarea').focus();
+      const textarea = card.querySelector('textarea');
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.focus();
     }
 
     function saveTodo(id) {
