@@ -508,7 +508,7 @@
 
     /* ===== CARDS ===== */
     .card {
-      background: var(--card-bg);
+      background: var(--white);
       border-radius: 12px;
       padding: 12px 36px 12px 14px;
       margin-bottom: 10px;
@@ -516,23 +516,16 @@
       transition: background 0.15s;
     }
 
-    .card-menu {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      z-index: 5;
-    }
-
-    .card:hover { background: var(--card-hover); }
+    .card:hover { background: var(--card-bg); }
     .card.completed { opacity: 0.6; }
     .card.completed .card-text { text-decoration: line-through; }
 
     .card.card-new {
-      background: rgba(212, 181, 122, 0.3);
+      background: rgba(212, 181, 122, 0.15);
       border-left: 3px solid var(--accent);
     }
 
-    .card.card-new:hover { background: rgba(212, 181, 122, 0.4); }
+    .card.card-new:hover { background: rgba(212, 181, 122, 0.22); }
 
     .card.card-purchased { opacity: 0.5; }
     .card.card-purchased .card-text { text-decoration: line-through; }
