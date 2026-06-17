@@ -508,7 +508,7 @@
 
     /* ===== CARDS ===== */
     .card {
-      background: var(--card-bg);
+      background: rgba(52, 82, 79, 0.08);
       border-radius: 12px;
       padding: 12px 36px 12px 14px;
       margin-bottom: 10px;
@@ -516,7 +516,7 @@
       transition: background 0.15s;
     }
 
-    .card:hover { background: var(--card-hover); }
+    .card:hover { background: rgba(52, 82, 79, 0.12); }
     .card.completed { opacity: 0.6; }
     .card.completed .card-text { text-decoration: line-through; }
 
@@ -527,33 +527,10 @@
     }
 
     .card.card-new {
-      background: rgba(52, 82, 79, 0.08);
       border-left: 3px solid var(--primary);
     }
 
-    .card.card-new:hover { background: rgba(52, 82, 79, 0.12); }
-
-    .new-tag {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      background: var(--primary);
-      color: var(--white);
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .card-link {
-      color: var(--primary);
-      text-decoration: underline;
-      word-break: break-all;
-    }
-
-    .card-link:hover {
-      color: var(--primary-dark);
-    }
+    .card.card-new:hover { background: rgba(52, 82, 79, 0.15); }
 
     .card.card-purchased { opacity: 0.5; }
     .card.card-purchased .card-text { text-decoration: line-through; }
@@ -572,8 +549,8 @@
     }
 
     .card:hover .card-menu-btn { opacity: 0.5; }
-    .card-menu-btn:hover { opacity: 1 !important; background: var(--card-hover); }
-    .card.card-new .card-menu-btn:hover { background: rgba(52, 82, 79, 0.15); }
+    .card-menu-btn:hover { opacity: 1 !important; background: rgba(52, 82, 79, 0.15); }
+    .card.card-new .card-menu-btn:hover { background: rgba(52, 82, 79, 0.2); }
 
     .card-menu-dropdown {
       display: none;
