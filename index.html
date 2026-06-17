@@ -1044,6 +1044,12 @@
     <header>
       <div class="header-left">
         <div class="date" id="currentDate"></div>
+        <button class="header-icon-btn" onclick="copySnapshot()" title="Copy to Clipboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          </svg>
+        </button>
         <button class="header-icon-btn" onclick="emailSnapshot()" title="Email Snapshot">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m22 2-7 20-4-9-9-4z"/>
@@ -2220,7 +2226,7 @@
       }).join('');
     }
 
-    function emailSnapshot() {
+    function generateSnapshotText() {
       const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
       let body = `SHIFT NOTE - ${date}\n`;
@@ -2266,8 +2272,14 @@
       });
       if (state.dailyInfo.events.length === 0) body += '(none)\n';
 
+      return body;
+    }
+
+    function emailSnapshot() {
+      const text = generateSnapshotText();
+      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
       const subject = encodeURIComponent(`Shift Note - ${date}`);
-      const bodyEncoded = encodeURIComponent(body);
+      const bodyEncoded = encodeURIComponent(text);
       const mailtoLink = `mailto:?subject=${subject}&body=${bodyEncoded}`;
 
       const a = document.createElement('a');
@@ -2277,6 +2289,13 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    }
+
+    function copySnapshot() {
+      const text = generateSnapshotText();
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Snapshot copied to clipboard');
+      });
     }
 
     function openSettings() {
