@@ -271,8 +271,107 @@
     footer {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 10px 20px;
       flex-shrink: 0;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .footer-links-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      opacity: 0.5;
+    }
+
+    .footer-link {
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    .footer-link:hover {
+      background: rgba(52, 82, 79, 0.1);
+    }
+
+    .footer-link-delete {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .footer-link:hover + .footer-link-delete,
+    .footer-link-delete:hover {
+      opacity: 0.6;
+    }
+
+    .footer-add-link {
+      background: var(--primary);
+      border: none;
+      color: var(--white);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .footer-add-link:hover {
+      background: var(--primary-dark);
+    }
+
+    .footer-link-form {
+      position: fixed;
+      bottom: 50px;
+      right: 20px;
+      background: var(--white);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .footer-link-form input {
+      padding: 6px 10px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .footer-link-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .footer-link-form .btn {
+      padding: 5px 10px;
+      font-size: 12px;
     }
 
     /* ===== COLUMNS ===== */
@@ -1198,7 +1297,18 @@
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Loading</span>
       </div>
+      <div class="footer-links" id="footerLinks">
+        <span class="footer-links-label">Important Links</span>
+        <div id="footerLinksList"></div>
+        <button class="footer-add-link" onclick="toggleFooterLinkForm()" title="Add link">+</button>
+      </div>
     </footer>
+    <div class="footer-link-form" id="footerLinkForm" style="display:none">
+      <input type="text" id="footerLinkTitle" placeholder="Title" />
+      <input type="text" id="footerLinkUrl" placeholder="https://..." />
+      <button class="btn btn-sm btn-primary" onclick="addFooterLink()">Add</button>
+      <button class="btn btn-sm btn-ghost" onclick="toggleFooterLinkForm()" style="color:var(--text);border-color:var(--text-muted)">Cancel</button>
+    </div>
   </div>
 
   <div class="task-page" id="taskPage">
@@ -1243,7 +1353,8 @@
         monthly_goal_target: 45000,
         shopping_list: [],
         faire_list: [],
-        events: []
+        events: [],
+        important_links: []
       },
       selectedAssignees: []
     };
@@ -2179,6 +2290,8 @@
           </div>
         `).join('');
       }
+
+      renderFooterLinks();
     }
 
     function renderTaskPage() {
@@ -2359,6 +2472,40 @@
 
         renderEmployeeList();
       }
+    }
+
+    function toggleFooterLinkForm() {
+      const form = document.getElementById('footerLinkForm');
+      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+      if (form.style.display === 'flex') {
+        document.getElementById('footerLinkTitle').focus();
+      }
+    }
+
+    function addFooterLink() {
+      const title = document.getElementById('footerLinkTitle').value.trim();
+      const url = document.getElementById('footerLinkUrl').value.trim();
+      if (!title || !url) { showToast('Fill in title and URL'); return; }
+      state.dailyInfo.important_links.push({ id: Date.now().toString(), title, url });
+      saveAll();
+      document.getElementById('footerLinkTitle').value = '';
+      document.getElementById('footerLinkUrl').value = '';
+      toggleFooterLinkForm();
+      renderFooterLinks();
+    }
+
+    function removeFooterLink(id) {
+      state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => l.id !== id);
+      saveAll();
+      renderFooterLinks();
+    }
+
+    function renderFooterLinks() {
+      const list = document.getElementById('footerLinksList');
+      list.innerHTML = state.dailyInfo.important_links.map(l => `
+        <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" class="footer-link">${escapeHtml(l.title)}</a>
+        <button class="footer-link-delete" onclick="removeFooterLink('${l.id}')" title="Remove">&times;</button>
+      `).join('');
     }
 
     function escapeHtml(text) {
