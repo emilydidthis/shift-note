@@ -2177,14 +2177,7 @@
             }).join('')}</div>`;
           }).join('');
 
-           const progressHtml = t.assignees.length > 1 ? `
-            <div class="progress-bar-container">
-              <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${pct}%"></div>
-              </div>
-              <div class="progress-text">${done}/${total} completed</div>
-            </div>
-          ` : '';
+            const progressText = t.assignees.length > 1 ? `<div class="progress-text">${done}/${total} completed</div>` : '';
 
            const dueDateHtml = t.dueDate ? `<div class="card-due-date ${isOverdue(t.dueDate) && !complete ? 'overdue' : ''}">Due ${formatDueDate(t.dueDate)}</div>` : '';
            const taskRecent = (Date.now() - new Date(t.timestamp).getTime()) < 3 * 86400000;
@@ -2195,7 +2188,7 @@
                 ${filterCheckboxHtml}
                 <div class="todo-card-body">
                   <div class="card-text">${parseMarkdown(t.content)}</div>
-                  ${progressHtml}
+                  ${progressText}
                   ${dueDateHtml}
                   <div class="card-meta">${taskRecent ? '<span class="new-tag">NEW</span>' : ''}Added by ${getFirstName(t.author)} - ${formatTime(t.timestamp)}</div>
                 </div>
