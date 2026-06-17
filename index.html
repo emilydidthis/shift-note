@@ -2049,7 +2049,7 @@
       if (!card || !item) return;
 
       const chipsHtml = state.employees.map(e => {
-        const selected = item.assignees.includes(e) ? 'selected' : '';
+        const selected = item.assignees.includes('All') || item.assignees.includes(e) ? 'selected' : '';
         return `<span class="assignee-chip ${selected}" data-value="${e}" onclick="this.classList.toggle('selected')">${e}</span>`;
       }).join('');
 
@@ -2084,7 +2084,10 @@
       item.dueDate = newDueDate;
 
       const oldAssignees = item.assignees;
-      item.assignees = newAssignees;
+      // If all employees are selected, use 'All' for consistency
+      item.assignees = newAssignees.length === state.employees.length && newAssignees.every(a => state.employees.includes(a))
+        ? ['All']
+        : newAssignees;
 
       const newCompletions = {};
       newAssignees.forEach(a => {
@@ -2200,7 +2203,7 @@
             }).join('')}</div>`;
           }).join('');
 
-            const progressText = t.assignees.length > 1 ? `<div class="progress-text">${done}/${total} completed</div>` : '';
+            const progressText = total > 1 ? `<div class="progress-text">${done}/${total} completed</div>` : '';
 
            const dueDateHtml = t.dueDate ? `<div class="card-due-date ${isOverdue(t.dueDate) && !complete ? 'overdue' : ''}">Due ${formatDueDate(t.dueDate)}</div>` : '';
            const taskRecent = (Date.now() - new Date(t.timestamp).getTime()) < 3 * 86400000;
