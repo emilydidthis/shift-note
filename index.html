@@ -435,19 +435,6 @@
 
     .card.card-new:hover { background: rgba(212, 181, 122, 0.18); }
 
-    .new-badge {
-      position: absolute;
-      top: 8px;
-      right: 28px;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      background: var(--accent);
-      color: var(--text);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
     .card-menu-btn {
       background: none;
       border: none;
@@ -1926,7 +1913,6 @@
           const recent = isNew(a);
           return `
           <div class="card ${recent ? 'card-new' : ''}" data-id="${a.id}">
-            ${recent ? '<span class="new-badge">NEW</span>' : ''}
             <div class="card-row">
               <div class="avatar">${getInitials(a.author)}</div>
               <div class="card-body">
@@ -1998,7 +1984,7 @@
             }).join('')}</div>`;
           }).join('');
 
-          const progressHtml = t.assignees.length > 1 ? `
+           const progressHtml = t.assignees.length > 1 ? `
             <div class="progress-bar-container">
               <div class="progress-bar-bg">
                 <div class="progress-bar-fill" style="width: ${pct}%"></div>
@@ -2008,9 +1994,10 @@
           ` : '';
 
            const dueDateHtml = t.dueDate ? `<div class="card-due-date ${isOverdue(t.dueDate) && !complete ? 'overdue' : ''}">Due ${formatDueDate(t.dueDate)}</div>` : '';
+           const taskRecent = (Date.now() - new Date(t.timestamp).getTime()) < 3 * 86400000;
 
           return `
-            <div class="card ${complete ? 'completed' : ''}" data-id="${t.id}">
+            <div class="card ${complete ? 'completed' : ''} ${taskRecent ? 'card-new' : ''}" data-id="${t.id}">
               <div class="todo-card-row">
                 ${filterCheckboxHtml}
                 <div class="todo-card-body">
