@@ -1419,11 +1419,6 @@
       return false;
     }
 
-    function loadAnnFilter() {
-      const saved = localStorage.getItem('annFilter');
-      if (saved) document.getElementById('annFilter').value = saved;
-    }
-
     function saveToLocal() {
       localStorage.setItem('shiftNote', JSON.stringify({
         employees: state.employees,
@@ -1432,13 +1427,11 @@
         todos: state.todos,
         dailyInfo: state.dailyInfo
       }));
-      localStorage.setItem('annFilter', document.getElementById('annFilter').value);
     }
 
     function loadData() {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
         loadFromLocal();
-        loadAnnFilter();
         updateAllDropdowns();
         render();
         updateSyncStatus('local');
@@ -1446,7 +1439,6 @@
       }
 
       const hasLocal = loadFromLocal();
-      loadAnnFilter();
       if (hasLocal) {
         updateAllDropdowns();
         render();
