@@ -1085,12 +1085,18 @@
 
     <div class="board">
       <div class="column wide">
-        <div class="column-header">
-          <div class="column-header-left">
-            Announcements
-            <span class="column-count" id="annCount">0</span>
+          <div class="column-header">
+            <div class="column-header-left">
+              Announcements
+              <span class="column-count" id="annCount">0</span>
+            </div>
+            <select class="todo-filter" id="annFilter" onchange="render()">
+              <option value="7" selected>Past 7 days</option>
+              <option value="14">Past 14 days</option>
+              <option value="30">Past 30 days</option>
+              <option value="all">All</option>
+            </select>
           </div>
-        </div>
         <div class="card-list" id="announcementList"></div>
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
         <div class="form-container" id="annForm">
@@ -1375,6 +1381,11 @@
       return false;
     }
 
+    function loadAnnFilter() {
+      const saved = localStorage.getItem('annFilter');
+      if (saved) document.getElementById('annFilter').value = saved;
+    }
+
     function saveToLocal() {
       localStorage.setItem('shiftNote', JSON.stringify({
         employees: state.employees,
@@ -1383,11 +1394,13 @@
         todos: state.todos,
         dailyInfo: state.dailyInfo
       }));
+      localStorage.setItem('annFilter', document.getElementById('annFilter').value);
     }
 
     function loadData() {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
         loadFromLocal();
+        loadAnnFilter();
         updateAllDropdowns();
         render();
         updateSyncStatus('local');
@@ -1395,6 +1408,7 @@
       }
 
       const hasLocal = loadFromLocal();
+      loadAnnFilter();
       if (hasLocal) {
         updateAllDropdowns();
         render();
@@ -1875,12 +1889,18 @@
       renderAssigneeDropdown('open', state.dailyInfo.open_assignee || '');
       renderAssigneeDropdown('close', state.dailyInfo.close_assignee || '');
 
-      const annList = document.getElementById('announcementList');
-      document.getElementById('annCount').textContent = state.announcements.length;
+      const annFilter = document.getElementById('annFilter').value;
+      const annCutoff = annFilter === 'all' ? 0 : Date.now() - (parseInt(annFilter) * 86400000);
+      const filteredAnns = annFilter === 'all'
+        ? state.announcements
+        : state.announcements.filter(a => new Date(a.timestamp).getTime() >= annCutoff);
 
-      const annHtml = state.announcements.length === 0
-        ? '<div class="empty-state">No announcements yet</div>'
-        : state.announcements.map(a => `
+      const annList = document.getElementById('announcementList');
+      document.getElementById('annCount').textContent = filteredAnns.length;
+
+      const annHtml = filteredAnns.length === 0
+        ? '<div class="empty-state">' + (annFilter === 'all' ? 'No announcements yet' : 'No announcements in this period') + '</div>'
+        : filteredAnns.map(a => `
           <div class="card" data-id="${a.id}">
             <div class="card-row">
               <div class="avatar">${getInitials(a.author)}</div>
