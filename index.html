@@ -1457,25 +1457,13 @@
         employeesUpdatedAt = data.employeesUpdatedAt || Date.now();
       }
 
-      const annMap = {};
-      state.announcements.forEach(a => annMap[a.id] = a);
-      cloudAnn.forEach(a => {
-        const existing = annMap[a.id];
-        if (!existing || (a.updatedAt || 0) > (existing.updatedAt || 0)) {
-          annMap[a.id] = a;
-        }
-      });
-      state.announcements = Object.values(annMap);
-
-      const todoMap = {};
-      state.todos.forEach(t => todoMap[t.id] = t);
-      cloudTodos.forEach(t => {
-        const existing = todoMap[t.id];
-        if (!existing || (t.updatedAt || 0) > (existing.updatedAt || 0)) {
-          todoMap[t.id] = t;
-        }
-      });
-      state.todos = Object.values(todoMap);
+      // Cloud is source of truth for announcements and todos
+      if (data.announcements) {
+        state.announcements = cloudAnn;
+      }
+      if (data.todos) {
+        state.todos = cloudTodos;
+      }
 
       if ((cloudDaily._updatedAt || 0) > (state.dailyInfo._updatedAt || 0)) {
         state.dailyInfo = { ...state.dailyInfo, ...cloudDaily };
