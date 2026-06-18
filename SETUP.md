@@ -180,6 +180,21 @@ function updateSingleRow(sheetName, item) {
   }
 }
 
+function getEmployeeCache() {
+  const props = PropertiesService.getScriptProperties();
+  let cached = props.getProperty('EMPLOYEE_CACHE');
+  if (cached) return JSON.parse(cached);
+
+  const employees = readSheet('Employees');
+  const cache = employees.map(e => ({ id: e.id, name: e.name }));
+  props.setProperty('EMPLOYEE_CACHE', JSON.stringify(cache));
+  return cache;
+}
+
+function invalidateEmployeeCache() {
+  PropertiesService.getScriptProperties().deleteProperty('EMPLOYEE_CACHE');
+}
+
 // --- API endpoints ---
 
 function doGet(e) {
@@ -210,11 +225,18 @@ function doGet(e) {
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
 
-  // Resolve author name to employee ID before saving
-  if (data.item && data.item.author && typeof data.item.author === 'string') {
-    const employees = readSheet('Employees');
-    const emp = employees.find(e => e.name === data.item.author);
-    if (emp) data.item.author = emp.id;
+  // Resolve author name to employee ID (only for sheets that need it)
+  if (data.item && ['addTodo', 'addAnnouncement', 'updateTodo', 'updateAnnouncement'].includes(data.action)) {
+    const employees = getEmployeeCache();
+    if (data.item.author && typeof data.item.author === 'string') {
+      const emp = employees.find(e => e.name === data.item.author);
+      if (emp) data.item.author = emp.id;
+    }
+  }
+
+  // Invalidate cache when employees change
+  if (['addEmployee', 'updateEmployee', 'deleteEmployee'].includes(data.action)) {
+    invalidateEmployeeCache();
   }
 
   switch (data.action) {
