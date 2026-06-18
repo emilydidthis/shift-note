@@ -210,6 +210,13 @@ function doGet(e) {
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
 
+  // Resolve author name to employee ID before saving
+  if (data.item && data.item.author && typeof data.item.author === 'string') {
+    const employees = readSheet('Employees');
+    const emp = employees.find(e => e.name === data.item.author);
+    if (emp) data.item.author = emp.id;
+  }
+
   switch (data.action) {
     case 'addTodo': appendRow('Todos', data.item); break;
     case 'updateTodo': updateRow('Todos', data.id, data.item); break;
