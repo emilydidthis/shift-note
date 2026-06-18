@@ -21,7 +21,7 @@ Copy and paste this entire block into the Apps Script editor:
 // Shift Note API v2 - Multi-sheet, row-based storage
 // Updated 06/18/26 — migrated from single-sheet JSON to multi-sheet format
 
-const SHEET_NAMES = ['Employees', 'Announcements', 'Todos', 'Events', 'ShoppingList', 'FaireList', 'ImportantLinks', 'DailyInfo', 'Archive'];
+const SHEET_NAMES = ['Employees', 'Announcements', 'Todos', 'Lists', 'DailyInfo', 'Archive'];
 
 function getSpreadsheet() {
   const props = PropertiesService.getScriptProperties();
@@ -59,10 +59,7 @@ function getDefaultHeaders(name) {
     Employees: ['id', 'name', 'createdAt'],
     Announcements: ['id', 'content', 'author', 'timestamp', 'updatedAt'],
     Todos: ['id', 'content', 'assignees', 'completions', 'author', 'timestamp', 'dueDate', 'completedAt', 'updatedAt'],
-    Events: ['id', 'content', 'timestamp'],
-    ShoppingList: ['id', 'content', 'purchased', 'timestamp'],
-    FaireList: ['id', 'content', 'purchased', 'timestamp'],
-    ImportantLinks: ['id', 'title', 'url'],
+    Lists: ['id', 'category', 'content', 'purchased', 'timestamp', 'title', 'url'],
     DailyInfo: ['folksWorking', 'registerOpen', 'registerClose', 'openAssignee', 'closeAssignee', 'monthlyGoalCurrent', 'monthlyGoalTarget', 'updatedAt'],
     Archive: ['id', 'type', 'content', 'assignees', 'author', 'timestamp', 'completedAt', 'archivedAt'],
   };
@@ -314,7 +311,7 @@ function doPost(e) {
 - Add announcements, todos, shopping items, and events
 - Click **Copy** or **Gmail** to send shift snapshots
 
-All data syncs to your Google Sheet automatically. The sheet uses 9 separate sheets (Employees, Announcements, Todos, Events, ShoppingList, FaireList, ImportantLinks, DailyInfo, Archive) for better scalability and data recovery.
+All data syncs to your Google Sheet automatically. The sheet uses 6 separate sheets (Employees, Announcements, Todos, Lists, DailyInfo, Archive) for better scalability and data recovery.
 
 ---
 
@@ -342,5 +339,5 @@ All data syncs to your Google Sheet automatically. The sheet uses 9 separate she
 - Announcements: id, content, author (employee ID), timestamp, updatedAt
 - Todos: id, content, assignees (JSON array of IDs), completions (JSON object), author (employee ID), timestamp, dueDate, completedAt, updatedAt
 - DailyInfo: single row with folksWorking, registerOpen, registerClose, openAssignee (employee ID), closeAssignee (employee ID), monthlyGoalCurrent, monthlyGoalTarget, updatedAt
-- Events, ShoppingList, FaireList, ImportantLinks: id + content fields
+- Events, ShoppingList, FaireList, ImportantLinks: combined into Lists sheet (category column: event, shopping, faire, link)
 - Archive: empty, for old completed items
