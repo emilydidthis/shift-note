@@ -2382,21 +2382,32 @@
     }
 
     function generateSnapshotText() {
-      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
-      let body = `SHIFT NOTE - ${date}\n`;
-      body += `${'='.repeat(40)}\n\n`;
+      let body = '';
 
       body += `FOLKS WORKING: ${state.dailyInfo.folks_working || 'Not set'}\n`;
       body += `OPENING: $${state.dailyInfo.register_open || 250} (${state.dailyInfo.open_assignee || '--'})\n`;
       body += `CLOSING: $${state.dailyInfo.register_close || 250} (${state.dailyInfo.close_assignee || '--'})\n`;
-      body += `MONTHLY GOAL: $${formatGoal(state.dailyInfo.monthly_goal_current || 0)} / $${formatGoal(state.dailyInfo.monthly_goal_target || 45000)}\n\n`;
+      body += `MONTHLY GOAL: $${formatGoal(state.dailyInfo.monthly_goal_current || 0)} / $${formatGoal(state.dailyInfo.monthly_goal_target || 45000)}\n`;
 
-      body += `ANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
-      state.announcements.forEach(a => {
-        body += `- ${a.content} (${getFirstName(a.author)})\n`;
+      if (state.dailyInfo.important_links.length > 0) {
+        body += `\nIMPORTANT LINKS:\n${'-'.repeat(30)}\n`;
+        state.dailyInfo.important_links.forEach(l => {
+          body += `• ${l.title} (${l.url})\n`;
+        });
+      }
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const recentAnnouncements = state.announcements.filter(a => {
+        if (!a.timestamp) return false;
+        return new Date(a.timestamp) >= sevenDaysAgo;
       });
-      if (state.announcements.length === 0) body += '(none)\n';
+
+      body += `\nANNOUNCEMENTS:\n${'-'.repeat(30)}\n`;
+      recentAnnouncements.forEach(a => {
+        body += `• ${a.content} (${getFirstName(a.author)})\n`;
+      });
+      if (recentAnnouncements.length === 0) body += '(none)\n';
 
       body += `\nTO-DO LIST:\n${'-'.repeat(30)}\n`;
       state.todos.forEach(t => {
@@ -2405,25 +2416,25 @@
         const total = assignees.length;
         const status = done === total ? '[DONE]' : `[${done}/${total}]`;
         const assigneeNames = assignees.map(a => getFirstName(a)).join(', ');
-        body += `${status} [${assigneeNames}] ${t.content} (by ${getFirstName(t.author)})\n`;
+        body += `• ${status} [${assigneeNames}] ${t.content} (by ${getFirstName(t.author)})\n`;
       });
       if (state.todos.length === 0) body += '(none)\n';
 
       body += `\nSHOPPING LIST:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.shopping_list.forEach(i => {
-        body += `- ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
+        body += `• ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
       });
       if (state.dailyInfo.shopping_list.length === 0) body += '(empty)\n';
 
       body += `\nFAIRE:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.faire_list.forEach(i => {
-        body += `- ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
+        body += `• ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
       });
       if (state.dailyInfo.faire_list.length === 0) body += '(empty)\n';
 
       body += `\nUPCOMING EVENTS:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.events.forEach(i => {
-        body += `- ${i.content}\n`;
+        body += `• ${i.content}\n`;
       });
       if (state.dailyInfo.events.length === 0) body += '(none)\n';
 
@@ -2432,8 +2443,12 @@
 
     function emailSnapshot() {
       const text = generateSnapshotText();
-      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      const subject = encodeURIComponent(`Shift Note - ${date}`);
+      const now = new Date();
+      const day = now.toLocaleDateString('en-US', { weekday: 'short' });
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const yy = String(now.getFullYear()).slice(-2);
+      const subject = encodeURIComponent(`Shift Note — ${day} ${m}/${d}/${yy}`);
       const bodyEncoded = encodeURIComponent(text);
       const mailtoLink = `mailto:?subject=${subject}&body=${bodyEncoded}`;
 
@@ -2455,8 +2470,12 @@
 
     function gmailSnapshot() {
       const text = generateSnapshotText();
-      const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      const subject = encodeURIComponent(`Shift Note - ${date}`);
+      const now = new Date();
+      const day = now.toLocaleDateString('en-US', { weekday: 'short' });
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const yy = String(now.getFullYear()).slice(-2);
+      const subject = encodeURIComponent(`Shift Note — ${day} ${m}/${d}/${yy}`);
       const body = encodeURIComponent(text);
       window.open(`https://mail.google.com/mail/?view=cm&su=${subject}&body=${body}`, '_blank');
     }
