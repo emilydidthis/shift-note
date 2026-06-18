@@ -1697,6 +1697,10 @@
     function handleCloudData(data) {
       const cloudAnn = data.announcements || [];
       const cloudTodos = (data.todos || []).map(t => {
+        // Normalize dueDate from Date object to string
+        if (t.dueDate instanceof Date) {
+          t.dueDate = t.dueDate.toISOString().split('T')[0];
+        }
         if (t.completions) return t;
         const completions = {};
         t.assignees.forEach(a => completions[a] = false);
@@ -2755,7 +2759,9 @@
     }
 
     function formatDueDate(dateStr) {
-      const due = new Date(dateStr + 'T00:00:00');
+      if (!dateStr) return '';
+      const date = (dateStr instanceof Date) ? dateStr.toISOString().split('T')[0] : dateStr;
+      const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
@@ -2768,7 +2774,9 @@
     }
 
     function isOverdue(dateStr) {
-      const due = new Date(dateStr + 'T00:00:00');
+      if (!dateStr) return false;
+      const date = (dateStr instanceof Date) ? dateStr.toISOString().split('T')[0] : dateStr;
+      const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return due.getTime() < today.getTime();
