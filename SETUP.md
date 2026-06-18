@@ -88,7 +88,7 @@ function readSingleRow(name) {
 }
 
 function getEmployeeName(id) {
-  const employees = readSheet('Employees');
+  const employees = getEmployeeCache();  // Cached lookup, not sheet read
   const emp = employees.find(e => String(e.id) === String(id));
   return emp ? emp.name : '';
 }
