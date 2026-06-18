@@ -1700,6 +1700,16 @@
         // Normalize dueDate from Date object to string
         if (t.dueDate instanceof Date) {
           t.dueDate = t.dueDate.toISOString().split('T')[0];
+        } else if (typeof t.dueDate === 'string' && t.dueDate.includes('T')) {
+          t.dueDate = t.dueDate.split('T')[0];
+        }
+        // Parse assignees from JSON string
+        if (typeof t.assignees === 'string') {
+          try { t.assignees = JSON.parse(t.assignees); } catch(e) { t.assignees = []; }
+        }
+        // Parse completions from JSON string
+        if (typeof t.completions === 'string') {
+          try { t.completions = JSON.parse(t.completions); } catch(e) { t.completions = {}; }
         }
         if (t.completions) return t;
         const completions = {};
@@ -2760,7 +2770,14 @@
 
     function formatDueDate(dateStr) {
       if (!dateStr) return '';
-      const date = (dateStr instanceof Date) ? dateStr.toISOString().split('T')[0] : dateStr;
+      let date;
+      if (dateStr instanceof Date) {
+        date = dateStr.toISOString().split('T')[0];
+      } else if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        date = dateStr.split('T')[0];
+      } else {
+        date = dateStr;
+      }
       const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -2775,7 +2792,14 @@
 
     function isOverdue(dateStr) {
       if (!dateStr) return false;
-      const date = (dateStr instanceof Date) ? dateStr.toISOString().split('T')[0] : dateStr;
+      let date;
+      if (dateStr instanceof Date) {
+        date = dateStr.toISOString().split('T')[0];
+      } else if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        date = dateStr.split('T')[0];
+      } else {
+        date = dateStr;
+      }
       const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);

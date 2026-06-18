@@ -127,7 +127,13 @@ function resolveEmployeeData(items, authorField) {
 function appendRow(sheetName, item) {
   const sheet = getSheet(sheetName);
   const headers = sheet.getDataRange().getValues()[0];
-  const row = headers.map(h => item[h] !== undefined ? item[h] : '');
+  const row = headers.map(h => {
+    const val = item[h];
+    if (Array.isArray(val) || (val !== null && typeof val === 'object')) {
+      return JSON.stringify(val);
+    }
+    return val !== undefined ? val : '';
+  });
   sheet.appendRow(row);
 }
 
@@ -140,7 +146,11 @@ function updateRow(sheetName, id, item) {
     if (String(data[i][idCol]) === String(id)) {
       headers.forEach((h, j) => {
         if (item[h] !== undefined) {
-          sheet.getRange(i + 1, j + 1).setValue(item[h]);
+          let val = item[h];
+          if (Array.isArray(val) || (val !== null && typeof val === 'object')) {
+            val = JSON.stringify(val);
+          }
+          sheet.getRange(i + 1, j + 1).setValue(val);
         }
       });
       return;
