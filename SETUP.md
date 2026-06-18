@@ -203,14 +203,57 @@ function updateSingleRow(sheetName, item) {
 
 // --- Caching with CacheService ---
 
+function readAllSheets() {
+  const ss = getSpreadsheet();
+  const allSheets = ss.getSheets();
+  const result = {};
+  allSheets.forEach(s => {
+    result[s.getName()] = s.getDataRange().getValues();
+  });
+  return result;
+}
+
+function getCachedAllSheets() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('cache_all_sheets');
+  if (cached) return JSON.parse(cached);
+
+  const data = readAllSheets();
+  cache.put('cache_all_sheets', JSON.stringify(data), 300); // 5 min
+  return data;
+}
+
+function invalidateAllCache() {
+  const cache = CacheService.getScriptCache();
+  // Remove all cache keys
+  cache.remove('cache_all_sheets');
+  cache.remove('cache_employees_lookup');
+  cache.remove('cache_employees');
+  cache.remove('cache_announcements');
+  cache.remove('cache_todos');
+  cache.remove('cache_dailyinfo');
+  cache.remove('cache_lists');
+}
+
+// Legacy per-table cache functions (kept for backward compatibility)
 function getCachedSheet(name, ttl) {
   const cache = CacheService.getScriptCache();
   const cached = cache.get('cache_' + name.toLowerCase());
   if (cached) return JSON.parse(cached);
 
-  const data = readSheet(name);
-  cache.put('cache_' + name.toLowerCase(), JSON.stringify(data), ttl);
-  return data;
+  const allData = getCachedAllSheets();
+  const rows = allData[name] || [];
+  if (rows.length > 0) {
+    const headers = rows[0];
+    const data = rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
+    cache.put('cache_' + name.toLowerCase(), JSON.stringify(data), ttl);
+    return data;
+  }
+  return [];
 }
 
 function getCachedSingleRow(name, ttl) {
@@ -219,8 +262,7 @@ function getCachedSingleRow(name, ttl) {
 }
 
 function invalidateCache(name) {
-  const cache = CacheService.getScriptCache();
-  cache.remove('cache_' + name.toLowerCase());
+  invalidateAllCache(); // Simpler: invalidate everything on any write
 }
 
 // Legacy cache for employee lookups (uses CacheService now)
@@ -229,26 +271,45 @@ function getEmployeeCache() {
   const cached = cache.get('cache_employees_lookup');
   if (cached) return JSON.parse(cached);
 
-  const employees = readSheet('Employees');
-  const lookup = employees.map(e => ({ id: e.id, name: e.name }));
+  const allData = getCachedAllSheets();
+  const rows = allData['Employees'] || [];
+  const lookup = rows.slice(1).map(row => ({ id: row[0], name: row[1] }));
   cache.put('cache_employees_lookup', JSON.stringify(lookup), 900);
   return lookup;
 }
 
 function invalidateEmployeeCache() {
-  const cache = CacheService.getScriptCache();
-  cache.remove('cache_employees_lookup');
+  invalidateAllCache();
 }
 
 // --- API endpoints ---
 
 function doGet(e) {
-  // Cache with different TTLs based on update frequency
-  const employees = getCachedSheet('Employees', 900);       // 15 min
-  const announcements = getCachedSheet('Announcements', 600); // 10 min
-  const todos = getCachedSheet('Todos', 300);               // 5 min
-  const dailyInfo = getCachedSingleRow('DailyInfo', 600);   // 10 min
-  const lists = getCachedSheet('Lists', 300);               // 5 min
+  // Batch read all sheets in ONE call, cached for 5 minutes
+  const allData = getCachedAllSheets();
+
+  // Parse raw sheet data into structured objects
+  const parseRows = (rows) => {
+    if (!rows || rows.length <= 1) return [];
+    const headers = rows[0];
+    return rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
+  };
+
+  const employees = parseRows(allData['Employees']);
+  const announcements = parseRows(allData['Announcements']);
+  const todos = parseRows(allData['Todos']);
+  const dailyInfoRows = allData['DailyInfo'] || [];
+  const dailyInfo = dailyInfoRows.length > 1 ? (() => {
+    const headers = dailyInfoRows[0];
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = dailyInfoRows[1][i]);
+    return obj;
+  })() : {};
+  const lists = parseRows(allData['Lists']);
 
   return ContentService.createTextOutput(JSON.stringify({
     employees: employees.map(e => e.name),
