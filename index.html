@@ -1718,8 +1718,37 @@
         state.todos = cloudTodos;
       }
 
-      if ((cloudDaily._updatedAt || 0) > (state.dailyInfo._updatedAt || 0)) {
-        state.dailyInfo = { ...state.dailyInfo, ...cloudDaily };
+      // Handle new dailyInfo format (field names changed)
+      if (data.dailyInfo) {
+        state.dailyInfo.folks_working = cloudDaily.folks_working || cloudDaily.folksWorking || '';
+        state.dailyInfo.register_open = cloudDaily.register_open || cloudDaily.registerOpen || 250;
+        state.dailyInfo.register_close = cloudDaily.register_close || cloudDaily.registerClose || 250;
+        state.dailyInfo.open_assignee = cloudDaily.open_assignee || cloudDaily.openAssignee || '';
+        state.dailyInfo.close_assignee = cloudDaily.close_assignee || cloudDaily.closeAssignee || '';
+        state.dailyInfo.monthly_goal_current = cloudDaily.monthly_goal_current || cloudDaily.monthlyGoalCurrent || 0;
+        state.dailyInfo.monthly_goal_target = cloudDaily.monthly_goal_target || cloudDaily.monthlyGoalTarget || 45000;
+      }
+
+      // Handle separate lists from new format
+      if (data.shoppingList) {
+        state.dailyInfo.shopping_list = data.shoppingList.map(i => ({
+          id: i.id,
+          content: i.content,
+          purchased: i.purchased === true || i.purchased === 'true'
+        }));
+      }
+      if (data.faireList) {
+        state.dailyInfo.faire_list = data.faireList.map(i => ({
+          id: i.id,
+          content: i.content,
+          purchased: i.purchased === true || i.purchased === 'true'
+        }));
+      }
+      if (data.importantLinks) {
+        state.dailyInfo.important_links = data.importantLinks;
+      }
+      if (data.events) {
+        state.dailyInfo.events = data.events;
       }
 
       saveToLocal();
@@ -1729,24 +1758,21 @@
       updateSyncStatus('cloud');
     }
 
-    async function saveToCloud() {
+    async function saveToCloud(action, id, item) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) return;
-      cloudSaveQueue.push(Date.now());
+      cloudSaveQueue.push({ action, id, item });
       if (cloudSaving) return;
       cloudSaving = true;
 
       while (cloudSaveQueue.length > 0) {
-        cloudSaveQueue.shift();
+        const op = cloudSaveQueue.shift();
         try {
           const payload = JSON.stringify({
-            action: 'saveAll',
-            employees: state.employees,
-            employeesUpdatedAt: employeesUpdatedAt,
-            announcements: state.announcements,
-            todos: state.todos,
-            dailyInfo: state.dailyInfo
+            action: op.action,
+            id: op.id,
+            item: op.item
           });
-          await fetch(APPS_SCRIPT_URL, {
+          await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: payload
@@ -1756,6 +1782,13 @@
           console.error('Cloud save failed:', e);
           updateSyncStatus('error');
         }
+      }
+      cloudSaving = false;
+    }
+
+    function saveAll() {
+      saveToLocal();
+    }
       }
       cloudSaving = false;
     }
@@ -1812,14 +1845,17 @@
       const author = document.getElementById('announcementAuthor').value;
       if (!text || !author) { showToast('Fill in content and author'); return; }
 
-      state.announcements.unshift({
+      const item = {
         id: Date.now().toString(),
         content: text,
         author,
-        timestamp: new Date().toISOString()
-      });
+        timestamp: new Date().toISOString(),
+        updatedAt: Date.now()
+      };
+      state.announcements.unshift(item);
 
       saveAll();
+      saveToCloud('addAnnouncement', null, item);
       document.getElementById('announcementText').value = '';
       document.getElementById('annForm').classList.remove('active');
       render();
@@ -1836,17 +1872,20 @@
 
       const dueDate = document.getElementById('todoDueDate').value || null;
 
-      state.todos.unshift({
+      const item = {
         id: Date.now().toString(),
         content: text,
         assignees: [...state.selectedAssignees],
         completions,
         author,
         timestamp: new Date().toISOString(),
-        dueDate
-      });
+        dueDate,
+        updatedAt: Date.now()
+      };
+      state.todos.unshift(item);
 
       saveAll();
+      saveToCloud('addTodo', null, item);
       document.getElementById('todoText').value = '';
       document.getElementById('todoDueDate').value = '';
       state.selectedAssignees = [];
@@ -1865,7 +1904,9 @@
       } else if (!isTodoComplete(todo)) {
         todo.completedAt = null;
       }
+      todo.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateTodo', id, todo);
       render();
       if (taskUser) renderTaskPage();
     }
@@ -1882,7 +1923,9 @@
       } else if (allDone) {
         todo.completedAt = null;
       }
+      todo.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateTodo', id, todo);
       render();
       if (taskUser) renderTaskPage();
     }
@@ -1893,11 +1936,13 @@
       const idx = state.todos.findIndex(t => t.id === id);
       state.todos = state.todos.filter(t => t.id !== id);
       saveAll();
+      saveToCloud('deleteTodo', id, null);
       render();
       if (taskUser) renderTaskPage();
       showToast('Task deleted', () => {
         state.todos.splice(idx, 0, todo);
         saveAll();
+        saveToCloud('addTodo', null, todo);
         render();
         if (taskUser) renderTaskPage();
       });
@@ -1909,10 +1954,12 @@
       const idx = state.announcements.findIndex(a => a.id === id);
       state.announcements = state.announcements.filter(a => a.id !== id);
       saveAll();
+      saveToCloud('deleteAnnouncement', id, null);
       render();
       showToast('Announcement deleted', () => {
         state.announcements.splice(idx, 0, ann);
         saveAll();
+        saveToCloud('addAnnouncement', null, ann);
         render();
       });
     }
@@ -1947,7 +1994,9 @@
       if (!newText) return;
 
       item.content = newText;
+      item.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateAnnouncement', id, item);
       render();
       showToast('Updated');
     }
@@ -1957,6 +2006,7 @@
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
       saveAll();
+      saveDailyInfoToCloud();
       render();
       showToast('Saved');
     }
@@ -1966,14 +2016,17 @@
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
       saveAll();
+      saveDailyInfoToCloud();
       render();
     }
 
     function addShoppingItem() {
       const text = document.getElementById('shoppingItem').value.trim();
       if (!text) return;
-      state.dailyInfo.shopping_list.push({ id: Date.now().toString(), content: text, purchased: false });
+      const item = { id: Date.now().toString(), content: text, purchased: false };
+      state.dailyInfo.shopping_list.push(item);
       saveAll();
+      saveToCloud('addShoppingItem', null, item);
       document.getElementById('shoppingItem').value = '';
       document.getElementById('shopForm').classList.remove('active');
       render();
@@ -1984,6 +2037,7 @@
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
+      saveToCloud('toggleShoppingItem', id, item);
       render();
     }
 
@@ -1993,10 +2047,12 @@
       const idx = state.dailyInfo.shopping_list.findIndex(i => i.id === id);
       state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteShoppingItem', id, null);
       render();
       showToast('Item removed', () => {
         state.dailyInfo.shopping_list.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addShoppingItem', null, item);
         render();
       });
     }
@@ -2029,6 +2085,7 @@
 
       item.content = newText;
       saveAll();
+      saveToCloud('toggleShoppingItem', id, item);
       render();
       showToast('Updated');
     }
@@ -2036,8 +2093,10 @@
     function addFaireItem() {
       const text = document.getElementById('faireItem').value.trim();
       if (!text) return;
-      state.dailyInfo.faire_list.push({ id: Date.now().toString(), content: text, purchased: false });
+      const item = { id: Date.now().toString(), content: text, purchased: false };
+      state.dailyInfo.faire_list.push(item);
       saveAll();
+      saveToCloud('addFaireItem', null, item);
       document.getElementById('faireItem').value = '';
       document.getElementById('faireForm').classList.remove('active');
       render();
@@ -2048,6 +2107,7 @@
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
+      saveToCloud('toggleFaireItem', id, item);
       render();
     }
 
@@ -2057,10 +2117,12 @@
       const idx = state.dailyInfo.faire_list.findIndex(i => i.id === id);
       state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteFaireItem', id, null);
       render();
       showToast('Item removed', () => {
         state.dailyInfo.faire_list.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addFaireItem', null, item);
         render();
       });
     }
@@ -2093,6 +2155,7 @@
 
       item.content = newText;
       saveAll();
+      saveToCloud('toggleFaireItem', id, item);
       render();
       showToast('Updated');
     }
@@ -2100,8 +2163,10 @@
     function addEvent() {
       const text = document.getElementById('eventText').value.trim();
       if (!text) return;
-      state.dailyInfo.events.push({ id: Date.now().toString(), content: text });
+      const item = { id: Date.now().toString(), content: text, timestamp: new Date().toISOString() };
+      state.dailyInfo.events.push(item);
       saveAll();
+      saveToCloud('addEvent', null, item);
       document.getElementById('eventText').value = '';
       document.getElementById('eventForm').classList.remove('active');
       render();
@@ -2113,10 +2178,12 @@
       const idx = state.dailyInfo.events.findIndex(i => i.id === id);
       state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteEvent', id, null);
       render();
       showToast('Event removed', () => {
         state.dailyInfo.events.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addEvent', null, item);
         render();
       });
     }
@@ -2207,8 +2274,10 @@
         newCompletions[a] = item.completions && item.completions[a] !== undefined ? item.completions[a] : false;
       });
       item.completions = newCompletions;
+      item.updatedAt = Date.now();
 
       saveAll();
+      saveToCloud('updateTodo', id, item);
       render();
       if (taskUser) renderTaskPage();
       showToast('Updated');
@@ -2621,16 +2690,12 @@
     function addEmployee() {
       const name = prompt('Employee name:');
       if (name && name.trim()) {
-        state.employees.push(name.trim());
+        const id = String(state.employees.length + 1);
+        const item = { id, name: name.trim(), createdAt: new Date().toISOString() };
+        state.employees.push(item.name);
+        saveToCloud('addEmployee', null, item);
         renderEmployeeList();
       }
-    }
-
-    function copyTaskLink(name) {
-      const url = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(name);
-      navigator.clipboard.writeText(url).then(() => {
-        showToast('Link copied for ' + name);
-      });
     }
 
     function deleteEmployee(index) {
@@ -2641,6 +2706,7 @@
       if (confirm(`Remove ${state.employees[index]}?`)) {
         const removed = state.employees[index];
         state.employees.splice(index, 1);
+        saveToCloud('deleteEmployee', String(index + 1), null);
 
         state.todos.forEach(t => {
           t.assignees = t.assignees.filter(a => a !== removed);
@@ -2651,20 +2717,14 @@
       }
     }
 
-    function toggleFooterLinkForm() {
-      const form = document.getElementById('footerLinkForm');
-      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-      if (form.style.display === 'flex') {
-        document.getElementById('footerLinkTitle').focus();
-      }
-    }
-
     function addFooterLink() {
       const title = document.getElementById('footerLinkTitle').value.trim();
       const url = document.getElementById('footerLinkUrl').value.trim();
       if (!title || !url) { showToast('Fill in title and URL'); return; }
-      state.dailyInfo.important_links.push({ id: Date.now().toString(), title, url });
+      const item = { id: Date.now().toString(), title, url };
+      state.dailyInfo.important_links.push(item);
       saveAll();
+      saveToCloud('addLink', null, item);
       document.getElementById('footerLinkTitle').value = '';
       document.getElementById('footerLinkUrl').value = '';
       toggleFooterLinkForm();
@@ -2674,6 +2734,7 @@
     function removeFooterLink(id) {
       state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => l.id !== id);
       saveAll();
+      saveToCloud('deleteLink', id, null);
       renderFooterLinks();
     }
 
@@ -2736,11 +2797,41 @@
       return n.toString();
     }
 
+    function copyTaskLink(name) {
+      const url = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(name);
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied for ' + name);
+      });
+    }
+
+    function toggleFooterLinkForm() {
+      const form = document.getElementById('footerLinkForm');
+      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+      if (form.style.display === 'flex') {
+        document.getElementById('footerLinkTitle').focus();
+      }
+    }
+
+    function saveDailyInfoToCloud() {
+      const item = {
+        folksWorking: state.dailyInfo.folks_working || '',
+        registerOpen: state.dailyInfo.register_open || 250,
+        registerClose: state.dailyInfo.register_close || 250,
+        openAssignee: state.employees.indexOf(state.dailyInfo.open_assignee) + 1 || '',
+        closeAssignee: state.employees.indexOf(state.dailyInfo.close_assignee) + 1 || '',
+        monthlyGoalCurrent: state.dailyInfo.monthly_goal_current || 0,
+        monthlyGoalTarget: state.dailyInfo.monthly_goal_target || 45000,
+        updatedAt: Date.now()
+      };
+      saveToCloud('saveDailyInfo', null, item);
+    }
+
     function saveGoalValue(field, value) {
       const num = (parseInt(value) || 0) * 1000;
       if (field === 'current') state.dailyInfo.monthly_goal_current = num;
       else state.dailyInfo.monthly_goal_target = num;
       saveAll();
+      saveDailyInfoToCloud();
       render();
       showToast('Goal updated');
     }
