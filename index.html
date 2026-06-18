@@ -1789,20 +1789,6 @@
     function saveAll() {
       saveToLocal();
     }
-      }
-      cloudSaving = false;
-    }
-
-    function saveAll() {
-      const now = Date.now();
-      state.announcements = state.announcements.map(a => ({ ...a, updatedAt: now }));
-      state.todos = state.todos.map(t => ({ ...t, updatedAt: now }));
-      employeesUpdatedAt = now;
-      state.dailyInfo._updatedAt = now;
-
-      saveToLocal();
-      saveToCloud();
-    }
 
     function isTodoComplete(todo) {
       const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
