@@ -201,29 +201,54 @@ function updateSingleRow(sheetName, item) {
   }
 }
 
+// --- Caching with CacheService ---
+
+function getCachedSheet(name, ttl) {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('cache_' + name.toLowerCase());
+  if (cached) return JSON.parse(cached);
+
+  const data = readSheet(name);
+  cache.put('cache_' + name.toLowerCase(), JSON.stringify(data), ttl);
+  return data;
+}
+
+function getCachedSingleRow(name, ttl) {
+  const rows = getCachedSheet(name, ttl);
+  return rows.length > 0 ? rows[0] : {};
+}
+
+function invalidateCache(name) {
+  const cache = CacheService.getScriptCache();
+  cache.remove('cache_' + name.toLowerCase());
+}
+
+// Legacy cache for employee lookups (uses CacheService now)
 function getEmployeeCache() {
-  const props = PropertiesService.getScriptProperties();
-  let cached = props.getProperty('EMPLOYEE_CACHE');
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('cache_employees_lookup');
   if (cached) return JSON.parse(cached);
 
   const employees = readSheet('Employees');
-  const cache = employees.map(e => ({ id: e.id, name: e.name }));
-  props.setProperty('EMPLOYEE_CACHE', JSON.stringify(cache));
-  return cache;
+  const lookup = employees.map(e => ({ id: e.id, name: e.name }));
+  cache.put('cache_employees_lookup', JSON.stringify(lookup), 900);
+  return lookup;
 }
 
 function invalidateEmployeeCache() {
-  PropertiesService.getScriptProperties().deleteProperty('EMPLOYEE_CACHE');
+  const cache = CacheService.getScriptCache();
+  cache.remove('cache_employees_lookup');
 }
 
 // --- API endpoints ---
 
 function doGet(e) {
-  const employees = readSheet('Employees');
-  const announcements = readSheet('Announcements');
-  const todos = readSheet('Todos');
-  const dailyInfo = readSingleRow('DailyInfo');
-  const lists = readSheet('Lists');  // One read for events, shopping, faire, links
+  // Cache with different TTLs based on update frequency
+  const employees = getCachedSheet('Employees', 900);       // 15 min
+  const announcements = getCachedSheet('Announcements', 600); // 10 min
+  const todos = getCachedSheet('Todos', 300);               // 5 min
+  const dailyInfo = getCachedSingleRow('DailyInfo', 600);   // 10 min
+  const lists = getCachedSheet('Lists', 300);               // 5 min
 
   return ContentService.createTextOutput(JSON.stringify({
     employees: employees.map(e => e.name),
@@ -258,39 +283,34 @@ function doPost(e) {
     }
   }
 
-  // Invalidate cache when employees change
-  if (['addEmployee', 'updateEmployee', 'deleteEmployee'].includes(data.action)) {
-    invalidateEmployeeCache();
-  }
-
   switch (data.action) {
-    case 'addTodo': appendRow('Todos', data.item); break;
-    case 'updateTodo': updateRow('Todos', data.id, data.item); break;
-    case 'deleteTodo': deleteRow('Todos', data.id); break;
+    case 'addTodo': appendRow('Todos', data.item); invalidateCache('Todos'); break;
+    case 'updateTodo': updateRow('Todos', data.id, data.item); invalidateCache('Todos'); break;
+    case 'deleteTodo': deleteRow('Todos', data.id); invalidateCache('Todos'); break;
 
-    case 'addAnnouncement': appendRow('Announcements', data.item); break;
-    case 'updateAnnouncement': updateRow('Announcements', data.id, data.item); break;
-    case 'deleteAnnouncement': deleteRow('Announcements', data.id); break;
+    case 'addAnnouncement': appendRow('Announcements', data.item); invalidateCache('Announcements'); break;
+    case 'updateAnnouncement': updateRow('Announcements', data.id, data.item); invalidateCache('Announcements'); break;
+    case 'deleteAnnouncement': deleteRow('Announcements', data.id); invalidateCache('Announcements'); break;
 
-    case 'addEvent': data.item.category = 'event'; appendRow('Lists', data.item); break;
-    case 'deleteEvent': deleteRowByCategory('Lists', data.id, 'event'); break;
+    case 'addEvent': data.item.category = 'event'; appendRow('Lists', data.item); invalidateCache('Lists'); break;
+    case 'deleteEvent': deleteRowByCategory('Lists', data.id, 'event'); invalidateCache('Lists'); break;
 
-    case 'addShoppingItem': data.item.category = 'shopping'; appendRow('Lists', data.item); break;
-    case 'toggleShoppingItem': updateRow('Lists', data.id, data.item); break;
-    case 'deleteShoppingItem': deleteRowByCategory('Lists', data.id, 'shopping'); break;
+    case 'addShoppingItem': data.item.category = 'shopping'; appendRow('Lists', data.item); invalidateCache('Lists'); break;
+    case 'toggleShoppingItem': updateRow('Lists', data.id, data.item); invalidateCache('Lists'); break;
+    case 'deleteShoppingItem': deleteRowByCategory('Lists', data.id, 'shopping'); invalidateCache('Lists'); break;
 
-    case 'addFaireItem': data.item.category = 'faire'; appendRow('Lists', data.item); break;
-    case 'toggleFaireItem': updateRow('Lists', data.id, data.item); break;
-    case 'deleteFaireItem': deleteRowByCategory('Lists', data.id, 'faire'); break;
+    case 'addFaireItem': data.item.category = 'faire'; appendRow('Lists', data.item); invalidateCache('Lists'); break;
+    case 'toggleFaireItem': updateRow('Lists', data.id, data.item); invalidateCache('Lists'); break;
+    case 'deleteFaireItem': deleteRowByCategory('Lists', data.id, 'faire'); invalidateCache('Lists'); break;
 
-    case 'addLink': data.item.category = 'link'; appendRow('Lists', data.item); break;
-    case 'deleteLink': deleteRowByCategory('Lists', data.id, 'link'); break;
+    case 'addLink': data.item.category = 'link'; appendRow('Lists', data.item); invalidateCache('Lists'); break;
+    case 'deleteLink': deleteRowByCategory('Lists', data.id, 'link'); invalidateCache('Lists'); break;
 
-    case 'saveDailyInfo': updateSingleRow('DailyInfo', data.item); break;
+    case 'saveDailyInfo': updateSingleRow('DailyInfo', data.item); invalidateCache('DailyInfo'); break;
 
-    case 'addEmployee': appendRow('Employees', data.item); break;
-    case 'updateEmployee': updateRow('Employees', data.id, data.item); break;
-    case 'deleteEmployee': deleteRow('Employees', data.id); break;
+    case 'addEmployee': appendRow('Employees', data.item); invalidateCache('Employees'); invalidateEmployeeCache(); break;
+    case 'updateEmployee': updateRow('Employees', data.id, data.item); invalidateCache('Employees'); invalidateEmployeeCache(); break;
+    case 'deleteEmployee': deleteRow('Employees', data.id); invalidateCache('Employees'); invalidateEmployeeCache(); break;
   }
 
   return ContentService.createTextOutput(JSON.stringify({ success: true }))
