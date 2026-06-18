@@ -164,6 +164,20 @@ function deleteRow(sheetName, id) {
   }
 }
 
+function deleteRowByCategory(sheetName, id, category) {
+  const sheet = getSheet(sheetName);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('id');
+  const catCol = headers.indexOf('category');
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][idCol]) === String(id) && data[i][catCol] === category) {
+      sheet.deleteRow(i + 1);
+      return;
+    }
+  }
+}
+
 function updateSingleRow(sheetName, item) {
   const sheet = getSheet(sheetName);
   const headers = sheet.getDataRange().getValues()[0];
@@ -199,26 +213,29 @@ function invalidateEmployeeCache() {
 
 function doGet(e) {
   const employees = readSheet('Employees');
-  const employeeNames = employees.map(e => e.name);
+  const announcements = readSheet('Announcements');
+  const todos = readSheet('Todos');
+  const dailyInfo = readSingleRow('DailyInfo');
+  const lists = readSheet('Lists');  // One read for events, shopping, faire, links
 
   return ContentService.createTextOutput(JSON.stringify({
-    employees: employeeNames,
-    announcements: resolveEmployeeData(readSheet('Announcements'), 'author'),
-    todos: resolveEmployeeData(readSheet('Todos'), 'author'),
+    employees: employees.map(e => e.name),
+    announcements: resolveEmployeeData(announcements, 'author'),
+    todos: resolveEmployeeData(todos, 'author'),
     dailyInfo: {
-      ...readSingleRow('DailyInfo'),
-      folks_working: readSingleRow('DailyInfo').folksWorking || '',
-      register_open: readSingleRow('DailyInfo').registerOpen || 250,
-      register_close: readSingleRow('DailyInfo').registerClose || 250,
-      open_assignee: getEmployeeName(readSingleRow('DailyInfo').openAssignee),
-      close_assignee: getEmployeeName(readSingleRow('DailyInfo').closeAssignee),
-      monthly_goal_current: readSingleRow('DailyInfo').monthlyGoalCurrent || 0,
-      monthly_goal_target: readSingleRow('DailyInfo').monthlyGoalTarget || 45000,
+      ...dailyInfo,
+      folks_working: dailyInfo.folksWorking || '',
+      register_open: dailyInfo.registerOpen || 250,
+      register_close: dailyInfo.registerClose || 250,
+      open_assignee: getEmployeeName(dailyInfo.openAssignee),
+      close_assignee: getEmployeeName(dailyInfo.closeAssignee),
+      monthly_goal_current: dailyInfo.monthlyGoalCurrent || 0,
+      monthly_goal_target: dailyInfo.monthlyGoalTarget || 45000,
     },
-    events: readSheet('Events'),
-    shoppingList: readSheet('ShoppingList'),
-    faireList: readSheet('FaireList'),
-    importantLinks: readSheet('ImportantLinks'),
+    events: lists.filter(r => r.category === 'event'),
+    shoppingList: lists.filter(r => r.category === 'shopping'),
+    faireList: lists.filter(r => r.category === 'faire'),
+    importantLinks: lists.filter(r => r.category === 'link'),
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -248,19 +265,19 @@ function doPost(e) {
     case 'updateAnnouncement': updateRow('Announcements', data.id, data.item); break;
     case 'deleteAnnouncement': deleteRow('Announcements', data.id); break;
 
-    case 'addEvent': appendRow('Events', data.item); break;
-    case 'deleteEvent': deleteRow('Events', data.id); break;
+    case 'addEvent': data.item.category = 'event'; appendRow('Lists', data.item); break;
+    case 'deleteEvent': deleteRowByCategory('Lists', data.id, 'event'); break;
 
-    case 'addShoppingItem': appendRow('ShoppingList', data.item); break;
-    case 'toggleShoppingItem': updateRow('ShoppingList', data.id, data.item); break;
-    case 'deleteShoppingItem': deleteRow('ShoppingList', data.id); break;
+    case 'addShoppingItem': data.item.category = 'shopping'; appendRow('Lists', data.item); break;
+    case 'toggleShoppingItem': updateRow('Lists', data.id, data.item); break;
+    case 'deleteShoppingItem': deleteRowByCategory('Lists', data.id, 'shopping'); break;
 
-    case 'addFaireItem': appendRow('FaireList', data.item); break;
-    case 'toggleFaireItem': updateRow('FaireList', data.id, data.item); break;
-    case 'deleteFaireItem': deleteRow('FaireList', data.id); break;
+    case 'addFaireItem': data.item.category = 'faire'; appendRow('Lists', data.item); break;
+    case 'toggleFaireItem': updateRow('Lists', data.id, data.item); break;
+    case 'deleteFaireItem': deleteRowByCategory('Lists', data.id, 'faire'); break;
 
-    case 'addLink': appendRow('ImportantLinks', data.item); break;
-    case 'deleteLink': deleteRow('ImportantLinks', data.id); break;
+    case 'addLink': data.item.category = 'link'; appendRow('Lists', data.item); break;
+    case 'deleteLink': deleteRowByCategory('Lists', data.id, 'link'); break;
 
     case 'saveDailyInfo': updateSingleRow('DailyInfo', data.item); break;
 
