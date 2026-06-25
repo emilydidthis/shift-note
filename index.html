@@ -2516,16 +2516,18 @@
       if (state.todos.length === 0) body += '(none)\n';
 
       body += `\nSHOPPING LIST:\n${'-'.repeat(30)}\n`;
-      state.dailyInfo.shopping_list.forEach(i => {
-        body += `• ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
+      const unpurchased = state.dailyInfo.shopping_list.filter(i => !i.purchased);
+      unpurchased.forEach(i => {
+        body += `• ${i.content}\n`;
       });
-      if (state.dailyInfo.shopping_list.length === 0) body += '(empty)\n';
+      if (unpurchased.length === 0) body += '(empty)\n';
 
       body += `\nFAIRE:\n${'-'.repeat(30)}\n`;
-      state.dailyInfo.faire_list.forEach(i => {
-        body += `• ${i.content}${i.purchased ? ' (purchased)' : ''}\n`;
+      const unpurchasedFaire = state.dailyInfo.faire_list.filter(i => !i.purchased);
+      unpurchasedFaire.forEach(i => {
+        body += `• ${i.content}\n`;
       });
-      if (state.dailyInfo.faire_list.length === 0) body += '(empty)\n';
+      if (unpurchasedFaire.length === 0) body += '(empty)\n';
 
       body += `\nUPCOMING EVENTS:\n${'-'.repeat(30)}\n`;
       state.dailyInfo.events.forEach(i => {
