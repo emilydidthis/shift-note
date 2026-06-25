@@ -2505,15 +2505,19 @@
       if (recentAnnouncements.length === 0) body += '(none)\n';
 
       body += `\nTO-DO LIST:\n${'-'.repeat(30)}\n`;
-      state.todos.forEach(t => {
+      const activeTodos = state.todos.filter(t => {
+        const done = getCompletionCount(t);
+        const assignees = t.assignees.includes('All') ? state.employees : t.assignees;
+        return done < assignees.length;
+      });
+      activeTodos.forEach(t => {
         const done = getCompletionCount(t);
         const assignees = t.assignees.includes('All') ? state.employees : t.assignees;
         const total = assignees.length;
-        const status = done === total ? '[DONE]' : `[${done}/${total}]`;
         const assigneeNames = assignees.map(a => getFirstName(a)).join(', ');
-        body += `• ${status} [${assigneeNames}] ${t.content} (by ${getFirstName(t.author)})\n`;
+        body += `• [${done}/${total}] [${assigneeNames}] ${t.content} (by ${getFirstName(t.author)})\n`;
       });
-      if (state.todos.length === 0) body += '(none)\n';
+      if (activeTodos.length === 0) body += '(none)\n';
 
       body += `\nSHOPPING LIST:\n${'-'.repeat(30)}\n`;
       const unpurchased = state.dailyInfo.shopping_list.filter(i => !i.purchased);
