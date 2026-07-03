@@ -2270,8 +2270,7 @@
       let filteredTodos;
 
       if (filter === 'completed') {
-        const weekAgo = Date.now() - 7 * 86400000;
-        filteredTodos = state.todos.filter(t => isTodoComplete(t) && (t.completedAt || 0) < weekAgo);
+        filteredTodos = state.todos.filter(t => isTodoComplete(t));
       } else {
         filteredTodos = filter === 'all'
           ? state.todos.filter(t => !isTodoComplete(t))
@@ -2293,7 +2292,7 @@
       const todoList = document.getElementById('todoList');
       document.getElementById('todoCount').textContent = filteredTodos.length;
       if (filteredTodos.length === 0) {
-        const emptyMsg = filter === 'completed' ? 'No old completed tasks' : (filter === 'all' ? 'No active tasks' : `No tasks for ${filter}`);
+        const emptyMsg = filter === 'completed' ? 'No completed tasks' : (filter === 'all' ? 'No active tasks' : `No tasks for ${filter}`);
         todoList.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
       } else {
         todoList.innerHTML = filteredTodos.map(t => {
