@@ -2539,6 +2539,9 @@
       });
       if (state.dailyInfo.events.length === 0) body += '(none)\n';
 
+      body += `\n${'-'.repeat(30)}\n`;
+      body += `📍 ${window.location.origin}${window.location.pathname}\n`;
+
       return body;
     }
 
