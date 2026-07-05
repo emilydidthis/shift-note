@@ -281,6 +281,24 @@ function doPost(e) {
       const emp = employees.find(e => e.name === data.item.author);
       if (emp) data.item.author = emp.id;
     }
+    // Resolve assignees array: ["Ash E"] → ["1"]
+    if (data.item.assignees && Array.isArray(data.item.assignees)) {
+      data.item.assignees = data.item.assignees.map(a => {
+        if (a === 'All') return 'All';
+        const emp = employees.find(e => e.name === a);
+        return emp ? emp.id : a;
+      });
+    }
+    // Resolve completions keys: {"Ash E": false} → {"1": false}
+    if (data.item.completions && typeof data.item.completions === 'object') {
+      const resolved = {};
+      Object.keys(data.item.completions).forEach(k => {
+        if (k === 'All') { resolved['All'] = data.item.completions[k]; return; }
+        const emp = employees.find(e => e.name === k);
+        resolved[emp ? emp.id : k] = data.item.completions[k];
+      });
+      data.item.completions = resolved;
+    }
   }
 
   switch (data.action) {
