@@ -1,23 +1,3 @@
-# Shift Note - Google Sheets Setup Guide
-
-This guide walks you through setting up Google Sheets as the backend for your shift note app.
-
----
-
-## Step 1: Set up Google Apps Script
-
-1. Go to [script.google.com](https://script.google.com) and click **New project**
-2. Delete any existing code in the editor
-3. Paste the code below (Step 2)
-4. Click **Save** (floppy disk icon)
-
----
-
-## Step 2: Apps Script Code
-
-Copy and paste this entire block into the Apps Script editor:
-
-```javascript
 // Shift Note API v2 - Multi-sheet, row-based storage
 // Updated 06/18/26 — migrated from single-sheet JSON to multi-sheet format
 
@@ -46,7 +26,6 @@ function getSheet(name) {
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    // Add default headers based on sheet name
     const headers = getDefaultHeaders(name);
     if (headers.length > 0) sheet.appendRow(headers);
     SpreadsheetApp.flush();
@@ -88,7 +67,7 @@ function readSingleRow(name) {
 }
 
 function getEmployeeName(id) {
-  const employees = getEmployeeCache();  // Cached lookup, not sheet read
+  const employees = getEmployeeCache();
   const emp = employees.find(e => String(e.id) === String(id));
   return emp ? emp.name : '';
 }
@@ -96,18 +75,15 @@ function getEmployeeName(id) {
 function resolveEmployeeData(items, authorField) {
   return items.map(item => {
     const resolved = { ...item };
-    // Resolve author
     if (authorField && resolved[authorField]) {
       resolved[authorField] = getEmployeeName(resolved[authorField]);
     }
-    // Resolve assignees array
     if (resolved.assignees) {
       try {
         const arr = typeof resolved.assignees === 'string' ? JSON.parse(resolved.assignees) : resolved.assignees;
         resolved.assignees = arr.map(a => a === 'All' ? 'All' : getEmployeeName(a));
       } catch (e) {}
     }
-    // Resolve completions keys
     if (resolved.completions) {
       try {
         const obj = typeof resolved.completions === 'string' ? JSON.parse(resolved.completions) : resolved.completions;
@@ -189,7 +165,6 @@ function updateSingleRow(sheetName, item) {
   const sheet = getSheet(sheetName);
   const headers = sheet.getDataRange().getValues()[0];
   if (sheet.getLastRow() <= 1) {
-    // No data row yet, append one
     const row = headers.map(h => item[h] !== undefined ? item[h] : '');
     sheet.appendRow(row);
   } else {
@@ -219,53 +194,16 @@ function getCachedAllSheets() {
   if (cached) return JSON.parse(cached);
 
   const data = readAllSheets();
-  cache.put('cache_all_sheets', JSON.stringify(data), 300); // 5 min
+  cache.put('cache_all_sheets', JSON.stringify(data), 300);
   return data;
 }
 
 function invalidateAllCache() {
   const cache = CacheService.getScriptCache();
-  // Remove all cache keys
   cache.remove('cache_all_sheets');
   cache.remove('cache_employees_lookup');
-  cache.remove('cache_employees');
-  cache.remove('cache_announcements');
-  cache.remove('cache_todos');
-  cache.remove('cache_dailyinfo');
-  cache.remove('cache_lists');
 }
 
-// Legacy per-table cache functions (kept for backward compatibility)
-function getCachedSheet(name, ttl) {
-  const cache = CacheService.getScriptCache();
-  const cached = cache.get('cache_' + name.toLowerCase());
-  if (cached) return JSON.parse(cached);
-
-  const allData = getCachedAllSheets();
-  const rows = allData[name] || [];
-  if (rows.length > 0) {
-    const headers = rows[0];
-    const data = rows.slice(1).map(row => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = row[i]);
-      return obj;
-    });
-    cache.put('cache_' + name.toLowerCase(), JSON.stringify(data), ttl);
-    return data;
-  }
-  return [];
-}
-
-function getCachedSingleRow(name, ttl) {
-  const rows = getCachedSheet(name, ttl);
-  return rows.length > 0 ? rows[0] : {};
-}
-
-function invalidateCache(name) {
-  invalidateAllCache(); // Simpler: invalidate everything on any write
-}
-
-// Legacy cache for employee lookups (uses CacheService now)
 function getEmployeeCache() {
   const cache = CacheService.getScriptCache();
   const cached = cache.get('cache_employees_lookup');
@@ -278,6 +216,10 @@ function getEmployeeCache() {
   return lookup;
 }
 
+function invalidateCache(name) {
+  invalidateAllCache();
+}
+
 function invalidateEmployeeCache() {
   invalidateAllCache();
 }
@@ -285,10 +227,8 @@ function invalidateEmployeeCache() {
 // --- API endpoints ---
 
 function doGet(e) {
-  // Batch read all sheets in ONE call, cached for 5 minutes
   const allData = getCachedAllSheets();
 
-  // Parse raw sheet data into structured objects
   const parseRows = (rows) => {
     if (!rows || rows.length <= 1) return [];
     const headers = rows[0];
@@ -335,7 +275,6 @@ function doGet(e) {
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
 
-  // Resolve author name to employee ID (only for sheets that need it)
   if (data.item && ['addTodo', 'addAnnouncement', 'updateTodo', 'updateAnnouncement'].includes(data.action)) {
     const employees = getEmployeeCache();
     if (data.item.author && typeof data.item.author === 'string') {
@@ -395,58 +334,3 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify({ success: true }))
     .setMimeType(ContentService.MimeType.JSON);
 }
-```
-
----
-
-## Step 3: Deploy the Apps Script
-
-1. Click **Deploy** (blue button, top right) → **New deployment**
-2. Click the gear icon next to "Select type" → **Web app**
-3. Fill in:
-   - **Description**: `Shift Note API`
-   - **Execute as**: `Me` (your email)
-   - **Who has access**: `Anyone` (important!)
-4. Click **Deploy**
-5. **Authorize** the script when prompted (click Review permissions → choose account → Advanced → Go to (unsafe) → Allow)
-6. Copy the **Web App URL** (looks like `https://script.google.com/macros/s/.../exec`)
-7. Paste it into `index.html` where it says `YOUR_APPS_SCRIPT_URL_HERE`
-
----
-
-## Step 4: Use the App
-
-- Open `index.html` in any browser (double-click the file)
-- Add announcements, todos, shopping items, and events
-- Click **Copy** or **Gmail** to send shift snapshots
-
-All data syncs to your Google Sheet automatically. The sheet uses 6 separate sheets (Employees, Announcements, Todos, Lists, DailyInfo, Archive) for better scalability and data recovery.
-
----
-
-## Troubleshooting
-
-**"Error loading data"**
-- Check that your Apps Script URL is correct in `index.html`
-- Verify deployment access is set to "Anyone"
-- Make sure all 9 sheets exist in your Google Sheet
-
-**Data not saving**
-- Re-deploy the Apps Script after any code changes (Deploy → Manage deployments → Edit → New version)
-- Check browser console for errors (F12)
-
-**CORS errors**
-- Make sure you deployed as a Web app with "Anyone" access
-- The URL must end in `/exec`, not `/dev`
-
-**Missing data after migration**
-- Verify CSVs were imported into the correct sheets
-- Check that employee IDs match between Todos/Announcements and the Employees sheet
-
-**Sheet structure**
-- Employees: id, name, createdAt
-- Announcements: id, content, author (employee ID), timestamp, updatedAt
-- Todos: id, content, assignees (JSON array of IDs), completions (JSON object), author (employee ID), timestamp, dueDate, completedAt, updatedAt
-- DailyInfo: single row with folksWorking, registerOpen, registerClose, openAssignee (employee ID), closeAssignee (employee ID), monthlyGoalCurrent, monthlyGoalTarget, updatedAt
-- Events, ShoppingList, FaireList, ImportantLinks: combined into Lists sheet (category column: event, shopping, faire, link)
-- Archive: empty, for old completed items

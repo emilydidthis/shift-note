@@ -1452,7 +1452,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLgjOxwmycVaPEqffmTYGzDsyheWT9vjv17Gwq0ojOn49GPwX6lYGzxq-UGzcERmNIyg/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn5_-AA_K6R6sQpuQzguYlzAfwZ1Kz6zl0CibZqs2oFmphj6_y5t1Caea87jDflxVa5w/exec';
     const DEFAULT_EMPLOYEES = ['Ash E', 'Brett B', 'Dom W', 'Emma F', 'Emily Z', 'Lena B'];
 
     let employeesUpdatedAt = 0;
@@ -1697,9 +1697,30 @@
     function handleCloudData(data) {
       const cloudAnn = data.announcements || [];
       const cloudTodos = (data.todos || []).map(t => {
+        // Normalize dueDate from Date object to string
+        if (t.dueDate instanceof Date) {
+          t.dueDate = t.dueDate.toISOString().split('T')[0];
+        } else if (typeof t.dueDate === 'string' && t.dueDate.includes('T')) {
+          t.dueDate = t.dueDate.split('T')[0];
+        }
+        // Ensure id is string
+        t.id = String(t.id);
+        // Parse assignees from JSON string
+        if (typeof t.assignees === 'string') {
+          try { t.assignees = JSON.parse(t.assignees); } catch(e) { t.assignees = []; }
+        }
+        // Parse completions from JSON string, ensure keys are strings
+        if (typeof t.completions === 'string') {
+          try {
+            t.completions = JSON.parse(t.completions);
+            const fixed = {};
+            Object.keys(t.completions).forEach(k => fixed[String(k)] = t.completions[k]);
+            t.completions = fixed;
+          } catch(e) { t.completions = {}; }
+        }
         if (t.completions) return t;
         const completions = {};
-        t.assignees.forEach(a => completions[a] = false);
+        t.assignees.forEach(a => completions[String(a)] = false);
         return { ...t, completions };
       });
       const cloudDaily = data.dailyInfo || {};
@@ -1718,8 +1739,37 @@
         state.todos = cloudTodos;
       }
 
-      if ((cloudDaily._updatedAt || 0) > (state.dailyInfo._updatedAt || 0)) {
-        state.dailyInfo = { ...state.dailyInfo, ...cloudDaily };
+      // Handle new dailyInfo format (field names changed)
+      if (data.dailyInfo) {
+        state.dailyInfo.folks_working = cloudDaily.folks_working || cloudDaily.folksWorking || '';
+        state.dailyInfo.register_open = cloudDaily.register_open || cloudDaily.registerOpen || 250;
+        state.dailyInfo.register_close = cloudDaily.register_close || cloudDaily.registerClose || 250;
+        state.dailyInfo.open_assignee = cloudDaily.open_assignee || cloudDaily.openAssignee || '';
+        state.dailyInfo.close_assignee = cloudDaily.close_assignee || cloudDaily.closeAssignee || '';
+        state.dailyInfo.monthly_goal_current = cloudDaily.monthly_goal_current || cloudDaily.monthlyGoalCurrent || 0;
+        state.dailyInfo.monthly_goal_target = cloudDaily.monthly_goal_target || cloudDaily.monthlyGoalTarget || 45000;
+      }
+
+      // Handle separate lists from new format
+      if (data.shoppingList) {
+        state.dailyInfo.shopping_list = data.shoppingList.map(i => ({
+          id: i.id,
+          content: i.content,
+          purchased: i.purchased === true || i.purchased === 'true'
+        }));
+      }
+      if (data.faireList) {
+        state.dailyInfo.faire_list = data.faireList.map(i => ({
+          id: i.id,
+          content: i.content,
+          purchased: i.purchased === true || i.purchased === 'true'
+        }));
+      }
+      if (data.importantLinks) {
+        state.dailyInfo.important_links = data.importantLinks;
+      }
+      if (data.events) {
+        state.dailyInfo.events = data.events;
       }
 
       saveToLocal();
@@ -1729,24 +1779,21 @@
       updateSyncStatus('cloud');
     }
 
-    async function saveToCloud() {
+    async function saveToCloud(action, id, item) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) return;
-      cloudSaveQueue.push(Date.now());
+      cloudSaveQueue.push({ action, id, item });
       if (cloudSaving) return;
       cloudSaving = true;
 
       while (cloudSaveQueue.length > 0) {
-        cloudSaveQueue.shift();
+        const op = cloudSaveQueue.shift();
         try {
           const payload = JSON.stringify({
-            action: 'saveAll',
-            employees: state.employees,
-            employeesUpdatedAt: employeesUpdatedAt,
-            announcements: state.announcements,
-            todos: state.todos,
-            dailyInfo: state.dailyInfo
+            action: op.action,
+            id: op.id,
+            item: op.item
           });
-          await fetch(APPS_SCRIPT_URL, {
+          await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: payload
@@ -1761,24 +1808,17 @@
     }
 
     function saveAll() {
-      const now = Date.now();
-      state.announcements = state.announcements.map(a => ({ ...a, updatedAt: now }));
-      state.todos = state.todos.map(t => ({ ...t, updatedAt: now }));
-      employeesUpdatedAt = now;
-      state.dailyInfo._updatedAt = now;
-
       saveToLocal();
-      saveToCloud();
     }
 
     function isTodoComplete(todo) {
       const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
-      return assignees.length > 0 && assignees.every(a => todo.completions[a]);
+      return assignees.length > 0 && assignees.every(a => todo.completions[String(a)]);
     }
 
     function getCompletionCount(todo) {
       const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
-      return assignees.filter(a => todo.completions[a]).length;
+      return assignees.filter(a => todo.completions[String(a)]).length;
     }
 
     function toggleAssignee(el) {
@@ -1812,14 +1852,17 @@
       const author = document.getElementById('announcementAuthor').value;
       if (!text || !author) { showToast('Fill in content and author'); return; }
 
-      state.announcements.unshift({
+      const item = {
         id: Date.now().toString(),
         content: text,
         author,
-        timestamp: new Date().toISOString()
-      });
+        timestamp: new Date().toISOString(),
+        updatedAt: Date.now()
+      };
+      state.announcements.unshift(item);
 
       saveAll();
+      saveToCloud('addAnnouncement', null, item);
       document.getElementById('announcementText').value = '';
       document.getElementById('annForm').classList.remove('active');
       render();
@@ -1836,17 +1879,20 @@
 
       const dueDate = document.getElementById('todoDueDate').value || null;
 
-      state.todos.unshift({
+      const item = {
         id: Date.now().toString(),
         content: text,
         assignees: [...state.selectedAssignees],
         completions,
         author,
         timestamp: new Date().toISOString(),
-        dueDate
-      });
+        dueDate,
+        updatedAt: Date.now()
+      };
+      state.todos.unshift(item);
 
       saveAll();
+      saveToCloud('addTodo', null, item);
       document.getElementById('todoText').value = '';
       document.getElementById('todoDueDate').value = '';
       state.selectedAssignees = [];
@@ -1857,7 +1903,7 @@
     }
 
     function toggleCompletion(id, assignee) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo || !todo.completions) return;
       todo.completions[assignee] = !todo.completions[assignee];
       if (isTodoComplete(todo) && !todo.completedAt) {
@@ -1865,13 +1911,15 @@
       } else if (!isTodoComplete(todo)) {
         todo.completedAt = null;
       }
+      todo.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateTodo', id, todo);
       render();
       if (taskUser) renderTaskPage();
     }
 
     function toggleTodoCompletion(id) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo || !todo.completions) return;
       const allDone = isTodoComplete(todo);
       todo.assignees.forEach(a => {
@@ -1882,44 +1930,50 @@
       } else if (allDone) {
         todo.completedAt = null;
       }
+      todo.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateTodo', id, todo);
       render();
       if (taskUser) renderTaskPage();
     }
 
     function deleteTodo(id) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo) return;
       const idx = state.todos.findIndex(t => t.id === id);
       state.todos = state.todos.filter(t => t.id !== id);
       saveAll();
+      saveToCloud('deleteTodo', id, null);
       render();
       if (taskUser) renderTaskPage();
       showToast('Task deleted', () => {
         state.todos.splice(idx, 0, todo);
         saveAll();
+        saveToCloud('addTodo', null, todo);
         render();
         if (taskUser) renderTaskPage();
       });
     }
 
     function deleteAnnouncement(id) {
-      const ann = state.announcements.find(a => a.id === id);
+      const ann = state.announcements.find(a => String(a.id) === String(id));
       if (!ann) return;
       const idx = state.announcements.findIndex(a => a.id === id);
       state.announcements = state.announcements.filter(a => a.id !== id);
       saveAll();
+      saveToCloud('deleteAnnouncement', id, null);
       render();
       showToast('Announcement deleted', () => {
         state.announcements.splice(idx, 0, ann);
         saveAll();
+        saveToCloud('addAnnouncement', null, ann);
         render();
       });
     }
 
     function editAnnouncement(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.announcements.find(a => a.id === id);
+      const item = state.announcements.find(a => String(a.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -1940,14 +1994,16 @@
     function saveAnnouncement(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const textarea = card.querySelector('textarea');
-      const item = state.announcements.find(a => a.id === id);
+      const item = state.announcements.find(a => String(a.id) === String(id));
       if (!item) return;
 
       const newText = textarea.value.trim();
       if (!newText) return;
 
       item.content = newText;
+      item.updatedAt = Date.now();
       saveAll();
+      saveToCloud('updateAnnouncement', id, item);
       render();
       showToast('Updated');
     }
@@ -1957,6 +2013,7 @@
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
       saveAll();
+      saveDailyInfoToCloud();
       render();
       showToast('Saved');
     }
@@ -1966,44 +2023,50 @@
       state.dailyInfo.register_open = document.getElementById('registerOpen').value;
       state.dailyInfo.register_close = document.getElementById('registerClose').value;
       saveAll();
+      saveDailyInfoToCloud();
       render();
     }
 
     function addShoppingItem() {
       const text = document.getElementById('shoppingItem').value.trim();
       if (!text) return;
-      state.dailyInfo.shopping_list.push({ id: Date.now().toString(), content: text, purchased: false });
+      const item = { id: Date.now().toString(), content: text, purchased: false };
+      state.dailyInfo.shopping_list.push(item);
       saveAll();
+      saveToCloud('addShoppingItem', null, item);
       document.getElementById('shoppingItem').value = '';
       document.getElementById('shopForm').classList.remove('active');
       render();
     }
 
     function toggleShoppingItem(id) {
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
+      saveToCloud('toggleShoppingItem', id, item);
       render();
     }
 
     function removeShoppingItem(id) {
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.shopping_list.findIndex(i => i.id === id);
       state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteShoppingItem', id, null);
       render();
       showToast('Item removed', () => {
         state.dailyInfo.shopping_list.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addShoppingItem', null, item);
         render();
       });
     }
 
     function editShoppingItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -2021,7 +2084,7 @@
     function saveShoppingItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const input = card.querySelector('input');
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
 
       const newText = input.value.trim();
@@ -2029,6 +2092,7 @@
 
       item.content = newText;
       saveAll();
+      saveToCloud('toggleShoppingItem', id, item);
       render();
       showToast('Updated');
     }
@@ -2036,38 +2100,43 @@
     function addFaireItem() {
       const text = document.getElementById('faireItem').value.trim();
       if (!text) return;
-      state.dailyInfo.faire_list.push({ id: Date.now().toString(), content: text, purchased: false });
+      const item = { id: Date.now().toString(), content: text, purchased: false };
+      state.dailyInfo.faire_list.push(item);
       saveAll();
+      saveToCloud('addFaireItem', null, item);
       document.getElementById('faireItem').value = '';
       document.getElementById('faireForm').classList.remove('active');
       render();
     }
 
     function toggleFaireItem(id) {
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
+      saveToCloud('toggleFaireItem', id, item);
       render();
     }
 
     function removeFaireItem(id) {
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.faire_list.findIndex(i => i.id === id);
       state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteFaireItem', id, null);
       render();
       showToast('Item removed', () => {
         state.dailyInfo.faire_list.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addFaireItem', null, item);
         render();
       });
     }
 
     function editFaireItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -2085,7 +2154,7 @@
     function saveFaireItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const input = card.querySelector('input');
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
 
       const newText = input.value.trim();
@@ -2093,6 +2162,7 @@
 
       item.content = newText;
       saveAll();
+      saveToCloud('toggleFaireItem', id, item);
       render();
       showToast('Updated');
     }
@@ -2100,23 +2170,27 @@
     function addEvent() {
       const text = document.getElementById('eventText').value.trim();
       if (!text) return;
-      state.dailyInfo.events.push({ id: Date.now().toString(), content: text });
+      const item = { id: Date.now().toString(), content: text, timestamp: new Date().toISOString() };
+      state.dailyInfo.events.push(item);
       saveAll();
+      saveToCloud('addEvent', null, item);
       document.getElementById('eventText').value = '';
       document.getElementById('eventForm').classList.remove('active');
       render();
     }
 
     function removeEvent(id) {
-      const item = state.dailyInfo.events.find(i => i.id === id);
+      const item = state.dailyInfo.events.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.events.findIndex(i => i.id === id);
       state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
       saveAll();
+      saveToCloud('deleteEvent', id, null);
       render();
       showToast('Event removed', () => {
         state.dailyInfo.events.splice(idx, 0, item);
         saveAll();
+        saveToCloud('addEvent', null, item);
         render();
       });
     }
@@ -2155,7 +2229,7 @@
 
     function editTodo(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.todos.find(t => t.id === id);
+      const item = state.todos.find(t => String(t.id) === String(id));
       if (!card || !item) return;
 
       const chipsHtml = state.employees.map(e => {
@@ -2185,7 +2259,7 @@
       const textarea = card.querySelector('textarea');
       const dateInput = card.querySelector('input[type="date"]');
       const selectedChips = card.querySelectorAll('.assignee-chip.selected');
-      const item = state.todos.find(t => t.id === id);
+      const item = state.todos.find(t => String(t.id) === String(id));
       if (!item) return;
 
       const newText = textarea.value.trim();
@@ -2207,8 +2281,10 @@
         newCompletions[a] = item.completions && item.completions[a] !== undefined ? item.completions[a] : false;
       });
       item.completions = newCompletions;
+      item.updatedAt = Date.now();
 
       saveAll();
+      saveToCloud('updateTodo', id, item);
       render();
       if (taskUser) renderTaskPage();
       showToast('Updated');
@@ -2621,16 +2697,12 @@
     function addEmployee() {
       const name = prompt('Employee name:');
       if (name && name.trim()) {
-        state.employees.push(name.trim());
+        const id = String(state.employees.length + 1);
+        const item = { id, name: name.trim(), createdAt: new Date().toISOString() };
+        state.employees.push(item.name);
+        saveToCloud('addEmployee', null, item);
         renderEmployeeList();
       }
-    }
-
-    function copyTaskLink(name) {
-      const url = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(name);
-      navigator.clipboard.writeText(url).then(() => {
-        showToast('Link copied for ' + name);
-      });
     }
 
     function deleteEmployee(index) {
@@ -2641,6 +2713,7 @@
       if (confirm(`Remove ${state.employees[index]}?`)) {
         const removed = state.employees[index];
         state.employees.splice(index, 1);
+        saveToCloud('deleteEmployee', String(index + 1), null);
 
         state.todos.forEach(t => {
           t.assignees = t.assignees.filter(a => a !== removed);
@@ -2651,20 +2724,14 @@
       }
     }
 
-    function toggleFooterLinkForm() {
-      const form = document.getElementById('footerLinkForm');
-      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-      if (form.style.display === 'flex') {
-        document.getElementById('footerLinkTitle').focus();
-      }
-    }
-
     function addFooterLink() {
       const title = document.getElementById('footerLinkTitle').value.trim();
       const url = document.getElementById('footerLinkUrl').value.trim();
       if (!title || !url) { showToast('Fill in title and URL'); return; }
-      state.dailyInfo.important_links.push({ id: Date.now().toString(), title, url });
+      const item = { id: Date.now().toString(), title, url };
+      state.dailyInfo.important_links.push(item);
       saveAll();
+      saveToCloud('addLink', null, item);
       document.getElementById('footerLinkTitle').value = '';
       document.getElementById('footerLinkUrl').value = '';
       toggleFooterLinkForm();
@@ -2672,8 +2739,9 @@
     }
 
     function removeFooterLink(id) {
-      state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => l.id !== id);
+      state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => String(l.id) !== String(id));
       saveAll();
+      saveToCloud('deleteLink', id, null);
       renderFooterLinks();
     }
 
@@ -2708,7 +2776,16 @@
     }
 
     function formatDueDate(dateStr) {
-      const due = new Date(dateStr + 'T00:00:00');
+      if (!dateStr) return '';
+      let date;
+      if (dateStr instanceof Date) {
+        date = dateStr.toISOString().split('T')[0];
+      } else if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        date = dateStr.split('T')[0];
+      } else {
+        date = dateStr;
+      }
+      const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
@@ -2721,7 +2798,16 @@
     }
 
     function isOverdue(dateStr) {
-      const due = new Date(dateStr + 'T00:00:00');
+      if (!dateStr) return false;
+      let date;
+      if (dateStr instanceof Date) {
+        date = dateStr.toISOString().split('T')[0];
+      } else if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        date = dateStr.split('T')[0];
+      } else {
+        date = dateStr;
+      }
+      const due = new Date(date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return due.getTime() < today.getTime();
@@ -2736,11 +2822,41 @@
       return n.toString();
     }
 
+    function copyTaskLink(name) {
+      const url = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(name);
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied for ' + name);
+      });
+    }
+
+    function toggleFooterLinkForm() {
+      const form = document.getElementById('footerLinkForm');
+      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+      if (form.style.display === 'flex') {
+        document.getElementById('footerLinkTitle').focus();
+      }
+    }
+
+    function saveDailyInfoToCloud() {
+      const item = {
+        folksWorking: state.dailyInfo.folks_working || '',
+        registerOpen: state.dailyInfo.register_open || 250,
+        registerClose: state.dailyInfo.register_close || 250,
+        openAssignee: state.employees.indexOf(state.dailyInfo.open_assignee) + 1 || '',
+        closeAssignee: state.employees.indexOf(state.dailyInfo.close_assignee) + 1 || '',
+        monthlyGoalCurrent: state.dailyInfo.monthly_goal_current || 0,
+        monthlyGoalTarget: state.dailyInfo.monthly_goal_target || 45000,
+        updatedAt: Date.now()
+      };
+      saveToCloud('saveDailyInfo', null, item);
+    }
+
     function saveGoalValue(field, value) {
       const num = (parseInt(value) || 0) * 1000;
       if (field === 'current') state.dailyInfo.monthly_goal_current = num;
       else state.dailyInfo.monthly_goal_target = num;
       saveAll();
+      saveDailyInfoToCloud();
       render();
       showToast('Goal updated');
     }
