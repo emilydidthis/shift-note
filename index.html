@@ -1703,17 +1703,24 @@
         } else if (typeof t.dueDate === 'string' && t.dueDate.includes('T')) {
           t.dueDate = t.dueDate.split('T')[0];
         }
+        // Ensure id is string
+        t.id = String(t.id);
         // Parse assignees from JSON string
         if (typeof t.assignees === 'string') {
           try { t.assignees = JSON.parse(t.assignees); } catch(e) { t.assignees = []; }
         }
-        // Parse completions from JSON string
+        // Parse completions from JSON string, ensure keys are strings
         if (typeof t.completions === 'string') {
-          try { t.completions = JSON.parse(t.completions); } catch(e) { t.completions = {}; }
+          try {
+            t.completions = JSON.parse(t.completions);
+            const fixed = {};
+            Object.keys(t.completions).forEach(k => fixed[String(k)] = t.completions[k]);
+            t.completions = fixed;
+          } catch(e) { t.completions = {}; }
         }
         if (t.completions) return t;
         const completions = {};
-        t.assignees.forEach(a => completions[a] = false);
+        t.assignees.forEach(a => completions[String(a)] = false);
         return { ...t, completions };
       });
       const cloudDaily = data.dailyInfo || {};
@@ -1806,12 +1813,12 @@
 
     function isTodoComplete(todo) {
       const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
-      return assignees.length > 0 && assignees.every(a => todo.completions[a]);
+      return assignees.length > 0 && assignees.every(a => todo.completions[String(a)]);
     }
 
     function getCompletionCount(todo) {
       const assignees = todo.assignees.includes('All') ? state.employees : todo.assignees;
-      return assignees.filter(a => todo.completions[a]).length;
+      return assignees.filter(a => todo.completions[String(a)]).length;
     }
 
     function toggleAssignee(el) {
@@ -1896,7 +1903,7 @@
     }
 
     function toggleCompletion(id, assignee) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo || !todo.completions) return;
       todo.completions[assignee] = !todo.completions[assignee];
       if (isTodoComplete(todo) && !todo.completedAt) {
@@ -1912,7 +1919,7 @@
     }
 
     function toggleTodoCompletion(id) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo || !todo.completions) return;
       const allDone = isTodoComplete(todo);
       todo.assignees.forEach(a => {
@@ -1931,7 +1938,7 @@
     }
 
     function deleteTodo(id) {
-      const todo = state.todos.find(t => t.id === id);
+      const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo) return;
       const idx = state.todos.findIndex(t => t.id === id);
       state.todos = state.todos.filter(t => t.id !== id);
@@ -1949,7 +1956,7 @@
     }
 
     function deleteAnnouncement(id) {
-      const ann = state.announcements.find(a => a.id === id);
+      const ann = state.announcements.find(a => String(a.id) === String(id));
       if (!ann) return;
       const idx = state.announcements.findIndex(a => a.id === id);
       state.announcements = state.announcements.filter(a => a.id !== id);
@@ -1966,7 +1973,7 @@
 
     function editAnnouncement(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.announcements.find(a => a.id === id);
+      const item = state.announcements.find(a => String(a.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -1987,7 +1994,7 @@
     function saveAnnouncement(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const textarea = card.querySelector('textarea');
-      const item = state.announcements.find(a => a.id === id);
+      const item = state.announcements.find(a => String(a.id) === String(id));
       if (!item) return;
 
       const newText = textarea.value.trim();
@@ -2033,7 +2040,7 @@
     }
 
     function toggleShoppingItem(id) {
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
@@ -2042,7 +2049,7 @@
     }
 
     function removeShoppingItem(id) {
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.shopping_list.findIndex(i => i.id === id);
       state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
@@ -2059,7 +2066,7 @@
 
     function editShoppingItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -2077,7 +2084,7 @@
     function saveShoppingItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const input = card.querySelector('input');
-      const item = state.dailyInfo.shopping_list.find(i => i.id === id);
+      const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
 
       const newText = input.value.trim();
@@ -2103,7 +2110,7 @@
     }
 
     function toggleFaireItem(id) {
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
       item.purchased = !item.purchased;
       saveAll();
@@ -2112,7 +2119,7 @@
     }
 
     function removeFaireItem(id) {
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.faire_list.findIndex(i => i.id === id);
       state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => i.id !== id);
@@ -2129,7 +2136,7 @@
 
     function editFaireItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!card || !item) return;
 
       card.innerHTML = `
@@ -2147,7 +2154,7 @@
     function saveFaireItem(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
       const input = card.querySelector('input');
-      const item = state.dailyInfo.faire_list.find(i => i.id === id);
+      const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
 
       const newText = input.value.trim();
@@ -2173,7 +2180,7 @@
     }
 
     function removeEvent(id) {
-      const item = state.dailyInfo.events.find(i => i.id === id);
+      const item = state.dailyInfo.events.find(i => String(i.id) === String(id));
       if (!item) return;
       const idx = state.dailyInfo.events.findIndex(i => i.id === id);
       state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
@@ -2222,7 +2229,7 @@
 
     function editTodo(id) {
       const card = document.querySelector(`.card[data-id="${id}"]`);
-      const item = state.todos.find(t => t.id === id);
+      const item = state.todos.find(t => String(t.id) === String(id));
       if (!card || !item) return;
 
       const chipsHtml = state.employees.map(e => {
@@ -2252,7 +2259,7 @@
       const textarea = card.querySelector('textarea');
       const dateInput = card.querySelector('input[type="date"]');
       const selectedChips = card.querySelectorAll('.assignee-chip.selected');
-      const item = state.todos.find(t => t.id === id);
+      const item = state.todos.find(t => String(t.id) === String(id));
       if (!item) return;
 
       const newText = textarea.value.trim();
@@ -2732,7 +2739,7 @@
     }
 
     function removeFooterLink(id) {
-      state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => l.id !== id);
+      state.dailyInfo.important_links = state.dailyInfo.important_links.filter(l => String(l.id) !== String(id));
       saveAll();
       saveToCloud('deleteLink', id, null);
       renderFooterLinks();
