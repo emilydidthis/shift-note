@@ -1940,8 +1940,8 @@
     function deleteTodo(id) {
       const todo = state.todos.find(t => String(t.id) === String(id));
       if (!todo) return;
-      const idx = state.todos.findIndex(t => t.id === id);
-      state.todos = state.todos.filter(t => t.id !== id);
+      const idx = state.todos.findIndex(t => String(t.id) === String(id));
+      state.todos = state.todos.filter(t => String(t.id) !== String(id));
       saveAll();
       saveToCloud('deleteTodo', id, null);
       render();
@@ -1958,8 +1958,8 @@
     function deleteAnnouncement(id) {
       const ann = state.announcements.find(a => String(a.id) === String(id));
       if (!ann) return;
-      const idx = state.announcements.findIndex(a => a.id === id);
-      state.announcements = state.announcements.filter(a => a.id !== id);
+      const idx = state.announcements.findIndex(a => String(a.id) === String(id));
+      state.announcements = state.announcements.filter(a => String(a.id) !== String(id));
       saveAll();
       saveToCloud('deleteAnnouncement', id, null);
       render();
@@ -2051,8 +2051,8 @@
     function removeShoppingItem(id) {
       const item = state.dailyInfo.shopping_list.find(i => String(i.id) === String(id));
       if (!item) return;
-      const idx = state.dailyInfo.shopping_list.findIndex(i => i.id === id);
-      state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => i.id !== id);
+      const idx = state.dailyInfo.shopping_list.findIndex(i => String(i.id) === String(id));
+      state.dailyInfo.shopping_list = state.dailyInfo.shopping_list.filter(i => String(i.id) !== String(id));
       saveAll();
       saveToCloud('deleteShoppingItem', id, null);
       render();
@@ -2121,8 +2121,8 @@
     function removeFaireItem(id) {
       const item = state.dailyInfo.faire_list.find(i => String(i.id) === String(id));
       if (!item) return;
-      const idx = state.dailyInfo.faire_list.findIndex(i => i.id === id);
-      state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => i.id !== id);
+      const idx = state.dailyInfo.faire_list.findIndex(i => String(i.id) === String(id));
+      state.dailyInfo.faire_list = state.dailyInfo.faire_list.filter(i => String(i.id) !== String(id));
       saveAll();
       saveToCloud('deleteFaireItem', id, null);
       render();
@@ -2182,8 +2182,8 @@
     function removeEvent(id) {
       const item = state.dailyInfo.events.find(i => String(i.id) === String(id));
       if (!item) return;
-      const idx = state.dailyInfo.events.findIndex(i => i.id === id);
-      state.dailyInfo.events = state.dailyInfo.events.filter(i => i.id !== id);
+      const idx = state.dailyInfo.events.findIndex(i => String(i.id) === String(id));
+      state.dailyInfo.events = state.dailyInfo.events.filter(i => String(i.id) !== String(id));
       saveAll();
       saveToCloud('deleteEvent', id, null);
       render();
