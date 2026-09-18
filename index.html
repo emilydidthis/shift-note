@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oxygen:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='10' width='60' height='80' rx='5' fill='%23F5F1EB' stroke='%2334524F' stroke-width='5'/><line x1='35' y1='30' x2='65' y2='30' stroke='%2334524F' stroke-width='4' stroke-linecap='round'/><line x1='35' y1='45' x2='65' y2='45' stroke='%2334524F' stroke-width='4' stroke-linecap='round'/><line x1='35' y1='60' x2='55' y2='60' stroke='%2334524F' stroke-width='4' stroke-linecap='round'/></svg>">
   <style>
     :root {
       --bg: #FFF8F0;
@@ -801,6 +802,78 @@
       text-align: center;
     }
 
+    /* ===== MAINTENANCE SECTION ===== */
+    .maintenance-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 14px 0;
+    }
+
+    .maintenance-pinned {
+      border-left: 3px solid var(--primary);
+      padding-right: 80px;
+    }
+
+    .maintenance-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge.completed {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .status-badge.in-progress {
+      background: var(--accent);
+      color: var(--text);
+    }
+
+    .status-badge.not-started {
+      background: var(--text-muted);
+      color: var(--text);
+    }
+
+    .maintenance-notes {
+      font-size: 11px;
+      color: var(--text);
+      opacity: 0.5;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .maintenance-status-corner {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .maintenance-update-link {
+      font-size: 10px;
+      color: var(--primary);
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      font-weight: 600;
+    }
+
+    .maintenance-pinned:hover .maintenance-update-link { opacity: 1; }
+    .maintenance-update-link:hover { text-decoration: underline; }
+
     /* ===== GOAL BAR ===== */
     .goal-bar {
       padding: 10px 20px 0;
@@ -1461,6 +1534,18 @@
       employees: [...DEFAULT_EMPLOYEES],
       announcements: [],
       todos: [],
+      weeklyMaintenance: {
+        returns: [
+          { task: 'June 1-6 Macmillan Return', status: 'Completed', dueDate: '2026-06-06', notes: 'Shipped out on 6/5/2026', sourceUrl: '#' },
+          { task: 'July 20-26 Penguin Random House', status: 'In Progress', dueDate: '2026-07-26', notes: '', sourceUrl: '#' },
+          { task: 'Aug 10-16 HarperCollins', status: 'Not Started', dueDate: '2026-08-16', notes: 'Check with Lena first', sourceUrl: '#' }
+        ],
+        shelves: [
+          { task: 'Aug 2-8  A1-A5 and S1', status: 'Completed', dueDate: '2026-08-08', notes: 'Did gardening, ttrpg, crosswords', sourceUrl: '#' },
+          { task: 'Aug 9-15  B1-B5 and M1-M3', status: 'Not Started', dueDate: '2026-08-15', notes: '', sourceUrl: '#' }
+        ],
+        syncTime: Date.now()
+      },
       dailyInfo: {
         folks_working: '',
         register_open: 250,
@@ -1644,6 +1729,9 @@
           return { ...t, completions };
         });
         state.dailyInfo = { ...state.dailyInfo, ...parsed.dailyInfo };
+        if (parsed.weeklyMaintenance) {
+          state.weeklyMaintenance = { ...state.weeklyMaintenance, ...parsed.weeklyMaintenance };
+        }
         return true;
       }
       return false;
@@ -1655,6 +1743,7 @@
         employeesUpdatedAt: employeesUpdatedAt,
         announcements: state.announcements,
         todos: state.todos,
+        weeklyMaintenance: { returns: state.weeklyMaintenance.returns, shelves: state.weeklyMaintenance.shelves },
         dailyInfo: state.dailyInfo
       }));
     }
@@ -1770,6 +1859,28 @@
       }
       if (data.events) {
         state.dailyInfo.events = data.events;
+      }
+
+      if (data.returnsMaintenance) {
+        state.weeklyMaintenance.returns = data.returnsMaintenance.map(r => ({
+          task: r.Task || '',
+          status: r.Status || 'Not Started',
+          dueDate: r.DueDate ? (r.DueDate instanceof Date ? r.DueDate.toISOString().split('T')[0] : String(r.DueDate).split('T')[0]) : null,
+          notes: r.Notes || '',
+          sourceUrl: r.SourceUrl || '#'
+        }));
+        state.weeklyMaintenance.syncTime = Date.now();
+      }
+
+      if (data.shelvesMaintenance) {
+        state.weeklyMaintenance.shelves = data.shelvesMaintenance.map(s => ({
+          task: s.Task || '',
+          status: s.Status || 'Not Started',
+          dueDate: s.DueDate ? (s.DueDate instanceof Date ? s.DueDate.toISOString().split('T')[0] : String(s.DueDate).split('T')[0]) : null,
+          notes: s.Notes || '',
+          sourceUrl: s.SourceUrl || '#'
+        }));
+        state.weeklyMaintenance.syncTime = Date.now();
       }
 
       saveToLocal();
@@ -2366,12 +2477,22 @@
       });
 
       const todoList = document.getElementById('todoList');
-      document.getElementById('todoCount').textContent = filteredTodos.length;
-      if (filteredTodos.length === 0) {
+
+      const pinned = getPinnedMaintenanceHtml();
+      const totalCount = pinned.count + filteredTodos.length;
+      document.getElementById('todoCount').textContent = totalCount;
+
+      let todoHtml = pinned.html;
+
+      if (pinned.count > 0 && filteredTodos.length > 0) {
+        todoHtml += '<div class="maintenance-divider"></div>';
+      }
+
+      if (filteredTodos.length === 0 && pinned.count === 0) {
         const emptyMsg = filter === 'completed' ? 'No completed tasks' : (filter === 'all' ? 'No active tasks' : `No tasks for ${filter}`);
         todoList.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
       } else {
-        todoList.innerHTML = filteredTodos.map(t => {
+        todoHtml += filteredTodos.map(t => {
           const complete = isTodoComplete(t);
           const done = getCompletionCount(t);
           const total = t.assignees.includes('All') ? state.employees.length : t.assignees.length;
@@ -2429,6 +2550,7 @@
             </div>
           `;
         }).join('');
+        todoList.innerHTML = todoHtml;
       }
 
       const shopFilter = document.getElementById('shopFilter').value;
@@ -2509,6 +2631,80 @@
       }
 
       renderFooterLinks();
+    }
+
+    function getStatusClass(status) {
+      const lower = (status || '').toLowerCase();
+      if (lower === 'completed' || lower === 'done') return 'completed';
+      if (lower === 'in progress' || lower === 'in-progress' || lower === 'progress') return 'in-progress';
+      return 'not-started';
+    }
+
+    function getCurrentMaintenanceItem(items) {
+      if (!items || items.length === 0) return null;
+      const sorted = [...items].sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
+      const incomplete = sorted.find(i => getStatusClass(i.status) !== 'completed');
+      return incomplete || sorted[sorted.length - 1];
+    }
+
+    function getPinnedMaintenanceHtml() {
+      if (!state.weeklyMaintenance) return { html: '', count: 0 };
+      let count = 0;
+      let html = '';
+
+      const returnsItem = getCurrentMaintenanceItem(state.weeklyMaintenance.returns);
+      const shelvesItem = getCurrentMaintenanceItem(state.weeklyMaintenance.shelves);
+
+      if (returnsItem) {
+        count++;
+        const statusClass = getStatusClass(returnsItem.status);
+        const dueDateHtml = returnsItem.dueDate ? `<div class="card-due-date ${isOverdue(returnsItem.dueDate) && statusClass !== 'completed' ? 'overdue' : ''}">Due ${formatDueDate(returnsItem.dueDate)}</div>` : '';
+        const notesHtml = returnsItem.notes ? `<div class="maintenance-notes">${escapeHtml(returnsItem.notes)}</div>` : '';
+        html += `
+          <div class="card maintenance-pinned">
+            <div class="card-row">
+              <div class="card-body">
+                <div class="card-text">📌 <span style="color:var(--primary);font-weight:700">RETURNS:</span> ${escapeHtml(returnsItem.task)}</div>
+                ${dueDateHtml}
+                ${notesHtml}
+              </div>
+            </div>
+            <div class="maintenance-status-corner">
+              <span class="status-badge ${statusClass}">${escapeHtml(returnsItem.status)}</span>
+              <a href="${escapeHtml(returnsItem.sourceUrl)}" target="_blank" rel="noopener" class="maintenance-update-link">Update status</a>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shelvesItem) {
+        count++;
+        const statusClass = getStatusClass(shelvesItem.status);
+        const dueDateHtml = shelvesItem.dueDate ? `<div class="card-due-date ${isOverdue(shelvesItem.dueDate) && statusClass !== 'completed' ? 'overdue' : ''}">Due ${formatDueDate(shelvesItem.dueDate)}</div>` : '';
+        const notesHtml = shelvesItem.notes ? `<div class="maintenance-notes">${escapeHtml(shelvesItem.notes)}</div>` : '';
+        html += `
+          <div class="card maintenance-pinned">
+            <div class="card-row">
+              <div class="card-body">
+                <div class="card-text">📌 <span style="color:var(--primary);font-weight:700">ALPHABETIZING:</span> ${escapeHtml(shelvesItem.task)}</div>
+                ${dueDateHtml}
+                ${notesHtml}
+              </div>
+            </div>
+            <div class="maintenance-status-corner">
+              <span class="status-badge ${statusClass}">${escapeHtml(shelvesItem.status)}</span>
+              <a href="${escapeHtml(shelvesItem.sourceUrl)}" target="_blank" rel="noopener" class="maintenance-update-link">Update status</a>
+            </div>
+          </div>
+        `;
+      }
+
+      return { html, count };
     }
 
     function renderTaskPage() {
