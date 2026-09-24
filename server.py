@@ -8,6 +8,7 @@ PORT = 8000
 class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         super().end_headers()
 
 print(f"Shift Note running at: http://localhost:{PORT}")

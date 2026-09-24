@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinned Tasks Preview - Shift Note</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600,0,700;1,400&family=Oxygen:wght@300,400,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFF8F0;
+      --card-bg: #F5F1EB;
+      --card-hover: #EDE8E0;
+      --white: #FFFFFF;
+      --primary: #34524F;
+      --primary-dark: #2a4240;
+      --accent: #D4B57A;
+      --text: #3A3632;
+      --text-muted: #D4CFC9;
+      --text-faint: #C8C0B6;
+      --danger: #B85C5C;
+      --border: #F5F1EB;
+      --font-serif: 'Lora', serif;
+      --font-sans: 'Oxygen', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .preview-container {
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .preview-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .preview-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Column */
+    .column {
+      background: var(--white);
+      border-radius: 16px;
+      width: 100%;
+      box-shadow: 0 2px 12px rgba(58, 54, 50, 0.08);
+      overflow: hidden;
+    }
+
+    .column-header {
+      padding: 14px 18px;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .column-count {
+      background: var(--primary);
+      color: var(--white);
+      border-radius: 10px;
+      padding: 3px 10px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .card-list {
+      padding: 12px;
+    }
+
+    /* Pinned Section */
+    .pinned-section {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--text-muted);
+    }
+
+    .pinned-section-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .pinned-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: var(--accent);
+      color: var(--white);
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(52, 82, 79, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .card:hover { background: rgba(52, 82, 79, 0.12); }
+
+    .card.card-pinned {
+      border-left: 3px solid var(--accent);
+      background: rgba(212, 181, 122, 0.08);
+    }
+
+    .card.card-pinned:hover {
+      background: rgba(212, 181, 122, 0.15);
+    }
+
+    .card.completed { opacity: 0.6; }
+    .card.completed .card-text { text-decoration: line-through; }
+
+    .card.card-new {
+      border-left: 3px solid var(--primary);
+    }
+
+    .todo-card-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .todo-card-body { flex: 1; min-width: 0; }
+
+    .card-text {
+      font-size: 14px;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: var(--text);
+      opacity: 0.5;
+      margin-top: 5px;
+    }
+
+    .avatar-stack {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      margin-left: auto;
+      gap: 1px;
+      align-items: flex-end;
+    }
+
+    .avatar-row { display: flex; gap: 1px; }
+
+    .avatar-stack .avatar {
+      width: 26px;
+      height: 26px;
+      font-size: 10px;
+      border: 2px solid var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .avatar-stack .avatar.done {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .avatar-stack .avatar.pending {
+      border-color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      font-family: var(--font-sans);
+    }
+
+    .progress-text {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-align: right;
+      margin-top: 2px;
+    }
+
+    .new-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: var(--primary);
+      color: var(--white);
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .card-due-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .pinned-link {
+      display: inline;
+      font-size: 11px;
+      color: var(--primary);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+    }
+
+    .pinned-link:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    /* Toggle explanation */
+    .toggle-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-btn {
+      padding: 8px 16px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--white);
+      color: var(--text);
+      transition: all 0.15s;
+    }
+
+    .toggle-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+
+    .toggle-btn:hover:not(.active) {
+      border-color: var(--primary);
+    }
+
+    .section-label {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 24px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <div class="preview-title">Pinned Tasks Preview</div>
+    <div class="preview-subtitle">Toggle between weeks to see how pinned tasks change</div>
+
+    <div class="toggle-bar">
+      <button class="toggle-btn active" onclick="showWeek('current')">This Week (Sep 21-27)</button>
+      <button class="toggle-btn" onclick="showWeek('other')">Other Week (Oct 5-11)</button>
+    </div>
+
+    <div class="column">
+      <div class="column-header">
+        <span>To-Do List</span>
+        <span class="column-count" id="todoCount">4</span>
+      </div>
+
+      <div class="card-list">
+        <!-- Pinned Section -->
+        <div class="pinned-section" id="pinnedSection">
+          <div class="pinned-section-header">Pinned This Week</div>
+
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">RETURNS</span>
+                  September 21-27 Macmillan Return
+                </div>
+                <div class="card-meta">In Progress · Shipped out on 6/5/2026 · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">ALPHABETIZING</span>
+                  September 22-28 A1-A5 and S1
+                </div>
+                <div class="card-meta">Not Started · A1-A4 (Emily) A5, S1 (Lena) · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regular Todos -->
+        <div class="card card-new">
+          <div class="todo-card-row">
+            <input type="checkbox" class="todo-checkbox" />
+            <div class="todo-card-body">
+              <div class="card-text">
+                <span class="new-tag">NEW</span>
+                Weekly inventory count
+              </div>
+              <div class="card-due-date">Due Sep 25</div>
+              <div class="card-meta">Added by Emily · 2 hours ago</div>
+            </div>
+            <div class="avatar-stack">
+              <div class="avatar-row">
+                <div class="avatar done" title="Emily: Done">EZ</div>
+                <div class="avatar pending" title="Lena: Pending">LK</div>
+              </div>
+              <div class="progress-text">1/2 completed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="todo-card-row">
+            <input type="checkbox" class="todo-checkbox" />
+            <div class="todo-card-body">
+              <div class="card-text">Restock shelves from back room</div>
+              <div class="card-meta">Added by Lena · 1 day ago</div>
+            </div>
+            <div class="avatar-stack">
+              <div class="avatar-row">
+                <div class="avatar pending" title="Lena: Pending">LK</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="todo-card-row">
+            <input type="checkbox" class="todo-checkbox" />
+            <div class="todo-card-body">
+              <div class="card-text">Update window display for fall</div>
+              <div class="card-meta">Added by Emily · 3 days ago</div>
+            </div>
+            <div class="avatar-stack">
+              <div class="avatar-row">
+                <div class="avatar pending" title="Emily: Pending">EZ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card completed">
+          <div class="todo-card-row">
+            <input type="checkbox" class="todo-checkbox" checked />
+            <div class="todo-card-body">
+              <div class="card-text">Process online orders</div>
+              <div class="card-meta">Added by Lena · 5 days ago</div>
+            </div>
+            <div class="avatar-stack">
+              <div class="avatar-row">
+                <div class="avatar done" title="Lena: Done">LK</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showWeek(week) {
+      const pinnedSection = document.getElementById('pinnedSection');
+      const buttons = document.querySelectorAll('.toggle-btn');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (week === 'current') {
+        pinnedSection.innerHTML = `
+          <div class="pinned-section-header">Pinned This Week</div>
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">RETURNS</span>
+                  September 21-27 Macmillan Return
+                </div>
+                <div class="card-meta">In Progress · Shipped out on 6/5/2026 · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">ALPHABETIZING</span>
+                  September 22-28 A1-A5 and S1
+                </div>
+                <div class="card-meta">Not Started · A1-A4 (Emily) A5, S1 (Lena) · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+        `;
+        pinnedSection.style.display = 'block';
+      } else {
+        pinnedSection.innerHTML = `
+          <div class="pinned-section-header">Pinned This Week</div>
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">RETURNS</span>
+                  October 5-11 Penguin Random House Return
+                </div>
+                <div class="card-meta">Not Started · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-pinned">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">ALPHABETIZING</span>
+                  October 6-12 B1-B8 and T1-T3
+                </div>
+                <div class="card-meta">Not Started · <a href="#" class="pinned-link" onclick="alert('Opens Google Sheet'); return false;">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+        `;
+        pinnedSection.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

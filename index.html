@@ -558,6 +558,57 @@
     .card.card-purchased { opacity: 0.5; }
     .card.card-purchased .card-text { text-decoration: line-through; }
 
+    .card.card-pinned {
+      border-left: 3px solid var(--accent);
+      background: rgba(212, 181, 122, 0.08);
+    }
+
+    .card.card-pinned:hover {
+      background: rgba(212, 181, 122, 0.15);
+    }
+
+    .pinned-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: var(--accent);
+      color: var(--white);
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .pinned-section {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--text-faint);
+    }
+
+    .pinned-section-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      padding-left: 14px;
+    }
+
+    .pinned-link {
+      display: inline;
+      font-size: 11px;
+      color: var(--primary);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+    }
+
+    .pinned-link:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
     .card-menu-btn {
       background: none;
       border: none;
@@ -1350,6 +1401,10 @@
             <option value="completed">Completed</option>
           </select>
         </div>
+        <div class="pinned-section" id="pinnedSection" style="display: none;">
+          <div class="pinned-section-header">Pinned This Week</div>
+          <div class="card-list" id="pinnedList"></div>
+        </div>
         <div class="card-list" id="todoList"></div>
         <button class="add-btn" onclick="toggleForm('todo')">+</button>
         <div class="form-container" id="todoForm">
@@ -1453,7 +1508,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwn5_-AA_K6R6sQpuQzguYlzAfwZ1Kz6zl0CibZqs2oFmphj6_y5t1Caea87jDflxVa5w/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHAKbXraD6RRjNrLxQXQlLSKF38BwndgAbnVaJEggyAUsCKH-iPsr74u8qsDxmXTk9zQ/exec';
     const DEFAULT_EMPLOYEES = ['Ash E', 'Brett B', 'Dom W', 'Emma F', 'Emily Z', 'Lena B'];
 
     let employeesUpdatedAt = 0;
@@ -1462,6 +1517,7 @@
       employees: [...DEFAULT_EMPLOYEES],
       announcements: [],
       todos: [],
+      pinnedTasks: [],
       dailyInfo: {
         folks_working: '',
         register_open: 250,
@@ -1543,7 +1599,38 @@
 
     checkDailyReset();
 
+    function parseWeekRange(taskName) {
+      const match = taskName.match(/([A-Za-z]+)\s+(\d{1,2})\s*-\s*(\d{1,2})/);
+      if (!match) return null;
+      
+      const month = new Date(Date.parse(match[1] + ' 1, 2026')).getMonth();
+      const startDay = parseInt(match[2]);
+      const endDay = parseInt(match[3]);
+      
+      const now = new Date();
+      const year = now.getFullYear();
+      
+      const startDate = new Date(year, month, startDay);
+      const endDate = new Date(year, month, endDay);
+      
+      return { start: startDate, end: endDate };
+    }
+
+    function isCurrentWeek(taskName) {
+      const range = parseWeekRange(taskName);
+      if (!range) return false;
+      
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      
+      return range.start <= weekEnd && range.end >= weekStart;
+    }
+
     function getInitials(name) {
+      name = String(name || '');
       const parts = name.trim().split(' ');
       if (parts.length === 1) {
         return name.substring(0, 2).toUpperCase();
@@ -1552,7 +1639,7 @@
     }
 
     function getFirstName(name) {
-      return name.split(' ')[0];
+      return String(name || '').split(' ')[0];
     }
 
     function generateEmployeeOptions(selected, displayFn) {
@@ -1686,6 +1773,7 @@
           t.assignees.forEach(a => completions[a] = false);
           return { ...t, completions };
         });
+        state.pinnedTasks = parsed.pinnedTasks || [];
         state.dailyInfo = { ...state.dailyInfo, ...parsed.dailyInfo };
         return true;
       }
@@ -1698,6 +1786,7 @@
         employeesUpdatedAt: employeesUpdatedAt,
         announcements: state.announcements,
         todos: state.todos,
+        pinnedTasks: state.pinnedTasks,
         dailyInfo: state.dailyInfo
       }));
     }
@@ -1780,6 +1869,9 @@
       }
       if (data.todos) {
         state.todos = cloudTodos;
+      }
+      if (data.pinnedTasks) {
+        state.pinnedTasks = data.pinnedTasks;
       }
 
       // Handle new dailyInfo format (field names changed)
@@ -2409,7 +2501,30 @@
       });
 
       const todoList = document.getElementById('todoList');
-      document.getElementById('todoCount').textContent = filteredTodos.length;
+      const pinnedList = document.getElementById('pinnedList');
+      const pinnedSection = document.getElementById('pinnedSection');
+      const currentWeekPinned = state.pinnedTasks.filter(t => isCurrentWeek(t.task));
+
+      if (currentWeekPinned.length > 0) {
+        pinnedSection.style.display = 'block';
+        pinnedList.innerHTML = currentWeekPinned.map(t => `
+          <div class="card card-pinned" data-id="pinned-${t.source}">
+            <div class="todo-card-row">
+              <div class="todo-card-body">
+                <div class="card-text">
+                  <span class="pinned-tag">${t.source.toUpperCase()}</span>
+                  ${escapeHtml(t.task)}
+                </div>
+                <div class="card-meta">${t.status} · ${t.notes || ''} · <a href="https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit" target="_blank" class="pinned-link">🔗 Link to Update</a></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        pinnedSection.style.display = 'none';
+      }
+
+      document.getElementById('todoCount').textContent = filteredTodos.length + currentWeekPinned.length;
       if (filteredTodos.length === 0) {
         const emptyMsg = filter === 'completed' ? 'No completed tasks' : (filter === 'all' ? 'No active tasks' : `No tasks for ${filter}`);
         todoList.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;

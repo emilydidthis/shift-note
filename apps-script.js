@@ -1,7 +1,7 @@
 // Shift Note API v2 - Multi-sheet, row-based storage
 // Updated 06/18/26 — migrated from single-sheet JSON to multi-sheet format
 
-const SHEET_NAMES = ['Employees', 'Announcements', 'Todos', 'Lists', 'DailyInfo', 'Archive'];
+const SHEET_NAMES = ['Employees', 'Announcements', 'Todos', 'Lists', 'DailyInfo', 'Archive', 'Returns', 'Alphabetizing'];
 
 function getSpreadsheet() {
   const props = PropertiesService.getScriptProperties();
@@ -41,6 +41,8 @@ function getDefaultHeaders(name) {
     Lists: ['id', 'category', 'content', 'purchased', 'timestamp', 'title', 'url'],
     DailyInfo: ['folksWorking', 'registerOpen', 'registerClose', 'openAssignee', 'closeAssignee', 'monthlyGoalCurrent', 'monthlyGoalTarget', 'updatedAt'],
     Archive: ['id', 'type', 'content', 'assignees', 'author', 'timestamp', 'completedAt', 'archivedAt'],
+    Returns: ['Task', 'Status', 'Owner', 'Stage', 'Due date', 'Notes'],
+    Alphabetizing: ['Task', 'Section to Alphabetize', 'Status', 'Shelves completed so far', 'Due date', 'Notes'],
   };
   return defaults[name] || [];
 }
@@ -250,6 +252,8 @@ function doGet(e) {
     return obj;
   })() : {};
   const lists = parseRows(allData['Lists']);
+  const returns = parseRows(allData['Returns']);
+  const alphabetizing = parseRows(allData['Alphabetizing']);
 
   return ContentService.createTextOutput(JSON.stringify({
     employees: employees.map(e => e.name),
@@ -269,6 +273,10 @@ function doGet(e) {
     shoppingList: lists.filter(r => r.category === 'shopping'),
     faireList: lists.filter(r => r.category === 'faire'),
     importantLinks: lists.filter(r => r.category === 'link'),
+    pinnedTasks: [
+      ...returns.map(r => ({ task: r.Task, status: r.Status, notes: r.Notes, source: 'Returns' })),
+      ...alphabetizing.map(a => ({ task: a.Task, status: a.Status, notes: a.Notes, source: 'Alphabetizing' }))
+    ],
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
