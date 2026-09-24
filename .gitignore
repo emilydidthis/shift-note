@@ -1,3 +1,6 @@
 migration/
 .DS_Store
 ARCHITECTURE_ANALYSIS.md
+node_modules/
+test-results/
+package-lock.json
