@@ -274,8 +274,19 @@ function doGet(e) {
     faireList: lists.filter(r => r.category === 'faire'),
     importantLinks: lists.filter(r => r.category === 'link'),
     pinnedTasks: [
-      ...returns.map(r => ({ task: r.Task, status: r.Status, notes: r.Notes, source: 'Returns' })),
-      ...alphabetizing.map(a => ({ task: a.Task, status: a.Status, notes: a.Notes, source: 'Alphabetizing' }))
+      ...returns.map(r => ({
+        task: r.Task,
+        status: r.Status,
+        stage: r.Stage,
+        notes: r.Notes,
+        source: 'Returns'
+      })),
+      ...alphabetizing.map(a => ({
+        task: a.Task,
+        section: a['Section to Alphabetize'],
+        shelvesCompleted: a['Shelves completed so far'],
+        source: 'Alphabetizing'
+      }))
     ],
   })).setMimeType(ContentService.MimeType.JSON);
 }

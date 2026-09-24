@@ -580,7 +580,8 @@
     }
 
     .pinned-section {
-      margin-bottom: 8px;
+      margin: 0 12px 8px;
+      padding-top: 6px;
       padding-bottom: 8px;
       border-bottom: 1px dashed var(--text-faint);
     }
@@ -592,7 +593,10 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 4px;
-      padding-left: 14px;
+    }
+
+    #pinnedList {
+      padding: 0;
     }
 
     .pinned-link {
@@ -1508,7 +1512,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHAKbXraD6RRjNrLxQXQlLSKF38BwndgAbnVaJEggyAUsCKH-iPsr74u8qsDxmXTk9zQ/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyKR02KRTY4p9yCkKdEMmE-ss1FrF7a0pre7NR4iXFMiRYpd9tuBBe9CYiH0SQvkcjW/exec';
     const DEFAULT_EMPLOYEES = ['Ash E', 'Brett B', 'Dom W', 'Emma F', 'Emily Z', 'Lena B'];
 
     let employeesUpdatedAt = 0;
@@ -2507,19 +2511,29 @@
 
       if (currentWeekPinned.length > 0) {
         pinnedSection.style.display = 'block';
-        pinnedList.innerHTML = currentWeekPinned.map(t => `
-          <div class="card card-pinned" data-id="pinned-${t.source}">
-            <div class="todo-card-row">
-              <div class="todo-card-body">
-                <div class="card-text">
-                  <span class="pinned-tag">${t.source.toUpperCase()}</span>
-                  ${escapeHtml(t.task)}
+        pinnedList.innerHTML = currentWeekPinned.map(t => {
+          const isReturns = t.source === 'Returns';
+          const title = isReturns
+            ? escapeHtml(t.task)
+            : `${escapeHtml(t.task)} — ${escapeHtml(t.section || '')}`;
+          const meta = isReturns
+            ? [t.stage, t.status].filter(Boolean).join(' · ')
+            : `Shelves completed: ${t.shelvesCompleted || '—'}`;
+
+          return `
+            <div class="card card-pinned" data-id="pinned-${t.source}">
+              <div class="todo-card-row">
+                <div class="todo-card-body">
+                  <div class="card-text">
+                    <span class="pinned-tag">${t.source.toUpperCase()}</span>
+                    ${title}
+                  </div>
+                  <div class="card-meta">${meta} · <a href="https://docs.google.com/spreadsheets/d/1bnfMIRoIImvH_uWc2Yic3j4o7lrkRwAQYL1_OzHstEk/edit?gid=0#gid=0" target="_blank" class="pinned-link">🔗 Link to Update</a></div>
                 </div>
-                <div class="card-meta">${t.status} · ${t.notes || ''} · <a href="https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit" target="_blank" class="pinned-link">🔗 Link to Update</a></div>
               </div>
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       } else {
         pinnedSection.style.display = 'none';
       }
