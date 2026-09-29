@@ -486,7 +486,8 @@
     .format-hint {
       font-size: 11px;
       color: var(--text-faint);
-      margin-top: 6px;
+      margin-top: 0;
+      margin-bottom: 5px;
     }
 
     .assignee-selector {
@@ -1615,20 +1616,30 @@
     checkDailyReset();
 
     function parseWeekRange(taskName) {
-      const match = taskName.match(/([A-Za-z]+)\s+(\d{1,2})\s*-\s*(\d{1,2})/);
-      if (!match) return null;
+      // Pattern 1: "September 20-26" (single month)
+      const singleMonth = taskName.match(/([A-Za-z]+)\s+(\d{1,2})\s*-\s*(\d{1,2})/);
+      if (singleMonth) {
+        const month = new Date(Date.parse(singleMonth[1] + ' 1, 2026')).getMonth();
+        const year = new Date().getFullYear();
+        return {
+          start: new Date(year, month, parseInt(singleMonth[2])),
+          end: new Date(year, month, parseInt(singleMonth[3]))
+        };
+      }
       
-      const month = new Date(Date.parse(match[1] + ' 1, 2026')).getMonth();
-      const startDay = parseInt(match[2]);
-      const endDay = parseInt(match[3]);
+      // Pattern 2: "September 27-October 3" (cross-month)
+      const crossMonth = taskName.match(/([A-Za-z]+)\s+(\d{1,2})\s*-\s*([A-Za-z]+)\s+(\d{1,2})/);
+      if (crossMonth) {
+        const startMonth = new Date(Date.parse(crossMonth[1] + ' 1, 2026')).getMonth();
+        const endMonth = new Date(Date.parse(crossMonth[3] + ' 1, 2026')).getMonth();
+        const year = new Date().getFullYear();
+        return {
+          start: new Date(year, startMonth, parseInt(crossMonth[2])),
+          end: new Date(year, endMonth, parseInt(crossMonth[4]))
+        };
+      }
       
-      const now = new Date();
-      const year = now.getFullYear();
-      
-      const startDate = new Date(year, month, startDay);
-      const endDate = new Date(year, month, endDay);
-      
-      return { start: startDate, end: endDate };
+      return null;
     }
 
     function isCurrentWeek(taskName) {
