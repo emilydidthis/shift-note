@@ -483,6 +483,12 @@
     .form-container select { cursor: pointer; margin-top: 8px; }
     .form-container .btn { margin-top: 8px; width: 100%; }
 
+    .format-hint {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-top: 6px;
+    }
+
     .assignee-selector {
       display: flex;
       flex-wrap: wrap;
@@ -1431,6 +1437,7 @@
         <button class="add-btn" onclick="toggleForm('event')">+</button>
         <div class="form-container" id="eventForm">
           <input type="text" id="eventText" placeholder="e.g., Tues 6/2: Liminal Library 6:30-7:30" />
+          <div class="format-hint">Tip: [text](url) to add a link</div>
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addEvent()">Add</button>
         </div>
         <div class="column-gap"></div>
@@ -1448,6 +1455,7 @@
         <button class="add-btn" onclick="toggleForm('shop')">+</button>
         <div class="form-container" id="shopForm">
           <input type="text" id="shoppingItem" placeholder="Add item..." />
+          <div class="format-hint">Tip: [text](url) to add a link</div>
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addShoppingItem()">Add</button>
         </div>
         <div class="column-gap"></div>
@@ -1465,6 +1473,7 @@
         <button class="add-btn" onclick="toggleForm('faire')">+</button>
         <div class="form-container" id="faireForm">
           <input type="text" id="faireItem" placeholder="Add Faire item..." />
+          <div class="format-hint">Tip: [text](url) to add a link</div>
           <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" onclick="addFaireItem()">Add</button>
         </div>
       </div>
@@ -2618,7 +2627,7 @@
             <div class="todo-card-row">
               <input type="checkbox" class="todo-checkbox" ${i.purchased ? 'checked' : ''} onclick="event.stopPropagation(); toggleShoppingItem('${i.id}')" />
               <div class="todo-card-body">
-                <div class="card-text">${escapeHtml(i.content)}</div>
+                <div class="card-text">${parseMarkdown(i.content)}</div>
               </div>
             </div>
             <div class="card-menu">
@@ -2647,7 +2656,7 @@
             <div class="todo-card-row">
               <input type="checkbox" class="todo-checkbox" ${i.purchased ? 'checked' : ''} onclick="event.stopPropagation(); toggleFaireItem('${i.id}')" />
               <div class="todo-card-body">
-                <div class="card-text">${escapeHtml(i.content)}</div>
+                <div class="card-text">${parseMarkdown(i.content)}</div>
               </div>
             </div>
             <div class="card-menu">
@@ -2668,7 +2677,7 @@
       } else {
         evtList.innerHTML = state.dailyInfo.events.map(i => `
           <div class="card" data-id="${i.id}">
-            <div class="card-text">${escapeHtml(i.content)}</div>
+            <div class="card-text">${parseMarkdown(i.content)}</div>
             <div class="card-menu">
               <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(this)">⋮</button>
               <div class="card-menu-dropdown">
