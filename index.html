@@ -1395,6 +1395,7 @@
         <button class="add-btn" onclick="toggleForm('ann')">+</button>
         <div class="form-container" id="annForm">
           <textarea id="announcementText" rows="2" placeholder="Add an announcement..."></textarea>
+          <div class="format-hint">Tip: [text](url) to add a link</div>
           <select id="announcementAuthor"></select>
           <button class="btn btn-primary btn-sm" onclick="addAnnouncement()">Add</button>
         </div>
@@ -1419,6 +1420,7 @@
         <button class="add-btn" onclick="toggleForm('todo')">+</button>
         <div class="form-container" id="todoForm">
           <textarea id="todoText" rows="2" placeholder="Add a task..."></textarea>
+          <div class="format-hint">Tip: [text](url) to add a link</div>
           <input type="date" id="todoDueDate" />
           <div class="assignee-selector" id="assigneeSelector"></div>
           <select id="todoAuthor"></select>
